@@ -1,0 +1,9 @@
+node_modules/
+dist/
+reports/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+tmp/

@@ -1,0 +1,26 @@
+{
+  "name": "bts-sec",
+  "version": "0.1.0",
+  "description": "Defensive security auditing toolkit for authorized web services and local web application projects.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "bts-sec": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "scan": "tsx src/cli.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}
