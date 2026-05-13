@@ -111,14 +111,23 @@ function parseArgs(argv: string[]): CliArgs {
     }
   }
 
-  if (!args.target && positional[0]) {
-    args.target = positional[0];
+  let remaining = stripNpmConfigDuplicates(positional, args);
+
+  if (!args.target && remaining[0]) {
+    args.target = remaining.shift();
   }
-  if (!args.out && positional[1]) {
-    args.out = positional[1];
+  if (!args.out && remaining[0]) {
+    args.out = remaining.shift();
   }
-  if (positional.length > 2) {
-    throw new Error(`Unexpected positional arguments: ${positional.slice(2).join(", ")}`);
+  if (!args.rateLimitRps && remaining[0] && isPositiveNumberText(remaining[0])) {
+    args.rateLimitRps = parsePositiveNumber(remaining.shift() as string, "--rate-limit-rps");
+  }
+  if (!args.timeoutMs && remaining[0] && isPositiveNumberText(remaining[0])) {
+    args.timeoutMs = parsePositiveNumber(remaining.shift() as string, "--timeout-ms");
+  }
+  remaining = stripNpmConfigDuplicates(remaining, args);
+  if (remaining.length > 0) {
+    throw new Error(`Unexpected positional arguments: ${remaining.join(", ")}`);
   }
 
   return args;
@@ -140,6 +149,11 @@ function parsePositiveNumber(value: string, flag: string): number {
   return parsed;
 }
 
+function isPositiveNumberText(value: string): boolean {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0;
+}
+
 function envString(name: string): string | undefined {
   const value = process.env[name];
   return value && value !== "true" ? value : undefined;
@@ -147,6 +161,24 @@ function envString(name: string): string | undefined {
 
 function envBoolean(name: string): boolean {
   return process.env[name] === "true";
+}
+
+function stripNpmConfigDuplicates(positional: string[], args: CliArgs): string[] {
+  const remaining = [...positional];
+  const duplicateValues = [
+    args.target,
+    args.out,
+    args.rateLimitRps?.toString(),
+    args.timeoutMs?.toString(),
+    args.kevCatalogPath,
+    ...args.nucleiTemplates
+  ].filter((value): value is string => Boolean(value));
+
+  while (remaining.length > 0 && duplicateValues.includes(remaining[0])) {
+    remaining.shift();
+  }
+
+  return remaining;
 }
 
 function printHelp(): void {
