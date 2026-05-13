@@ -11,9 +11,13 @@ export function renderSarifReport(result: ScanResult): string {
     help: { text: finding.verification },
     properties: {
       category: finding.category,
+      vibeRiskCategory: finding.vibeRiskCategory,
       severity: finding.severity,
       confidence: finding.confidence,
       owasp: finding.owaspMapping.map((mapping) => mapping.id),
+      owaspTop10_2025: finding.owaspTop10_2025,
+      owaspLLMTop10_2025: finding.owaspLLMTop10_2025,
+      owaspAPITop10_2023: finding.owaspAPITop10_2023,
       cwe: finding.cweMapping.map((mapping) => mapping.id)
     }
   }]));
@@ -52,8 +56,11 @@ export function renderSarifReport(result: ScanResult): string {
           ],
           properties: {
             sourceTool: finding.sourceTool,
+            targetType: finding.targetType,
+            vibeRiskCategory: finding.vibeRiskCategory,
             cve: finding.cve,
             kevKnownExploited: finding.kevKnownExploited,
+            cisaKevPriority: finding.cisaKevPriority,
             recommendation: finding.recommendation,
             verification: finding.verification
           }

@@ -1,7 +1,17 @@
 export type Severity = "info" | "low" | "medium" | "high" | "critical";
 export type Confidence = "low" | "medium" | "high";
-export type TargetKind = "url" | "directory";
+export type TargetKind = "url" | "directory" | "combined";
 export type ReportFormat = "markdown" | "html" | "json" | "sarif";
+export type ScanProfile = "baseline" | "vibe-risk";
+export type FindingTargetType = "url" | "local" | "config" | "dependency" | "agent-artifact";
+export type AffectedDataType =
+  | "pii"
+  | "medical"
+  | "financial"
+  | "credential"
+  | "customer-conversation"
+  | "internal-business"
+  | "unknown";
 
 export interface SecurityMapping {
   id: string;
@@ -15,13 +25,27 @@ export interface Finding {
   severity: Severity;
   confidence: Confidence;
   category: string;
-  sourceTool: string;
+  vibeRiskCategory?: string;
+  sourceTool?: string;
+  targetType: FindingTargetType;
   target: string;
   file?: string;
   line?: number;
   endpoint?: string;
   evidence: string;
   redactedEvidence: string;
+  affectedDataType?: AffectedDataType;
+  platformHint?: string;
+  authBoundaryRisk?: boolean;
+  agentConfigRisk?: boolean;
+  hallucinatedDependencyRisk?: boolean;
+  businessLogicRisk?: boolean;
+  owaspTop10_2025?: string[];
+  owaspLLMTop10_2025?: string[];
+  owaspAPITop10_2023?: string[];
+  cweTop25_2025?: string[];
+  cisaKevPriority?: boolean;
+  remediationPromptForCodex?: string;
   owaspMapping: SecurityMapping[];
   cweMapping: SecurityMapping[];
   cve?: string;
@@ -33,12 +57,17 @@ export interface Finding {
 
 export type FindingInput = Omit<
   Finding,
-  "redactedEvidence" | "owaspMapping" | "cweMapping" | "kevKnownExploited"
+  | "redactedEvidence"
+  | "owaspMapping"
+  | "cweMapping"
+  | "kevKnownExploited"
+  | "targetType"
 > & {
   redactedEvidence?: string;
   owaspMapping?: SecurityMapping[];
   cweMapping?: SecurityMapping[];
   kevKnownExploited?: boolean;
+  targetType?: FindingTargetType;
 };
 
 export interface UrlTarget {
@@ -55,9 +84,17 @@ export interface DirectoryTarget {
   path: string;
 }
 
-export type ScanTarget = UrlTarget | DirectoryTarget;
+export interface CombinedTarget {
+  kind: "combined";
+  raw: string;
+  url?: UrlTarget;
+  directory?: DirectoryTarget;
+}
+
+export type ScanTarget = UrlTarget | DirectoryTarget | CombinedTarget;
 
 export interface ScanOptions {
+  profile: ScanProfile;
   outputDir: string;
   formats: ReportFormat[];
   rateLimitRps: number;

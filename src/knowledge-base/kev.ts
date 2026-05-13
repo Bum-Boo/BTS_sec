@@ -45,7 +45,8 @@ export async function applyKevEnrichment(
 
   return findings.map((finding) => ({
     ...finding,
-    kevKnownExploited: finding.cve ? kevSet.has(finding.cve) : finding.kevKnownExploited
+    kevKnownExploited: finding.cve ? kevSet.has(finding.cve) : finding.kevKnownExploited,
+    cisaKevPriority: finding.cve ? kevSet.has(finding.cve) : finding.cisaKevPriority
   }));
 }
 

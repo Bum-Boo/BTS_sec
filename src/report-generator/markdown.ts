@@ -1,9 +1,10 @@
 import { ScanResult } from "../scanner-core/types";
 import { sanitizeFindingsForReport } from "./sanitize";
+import { targetLabel } from "./target-label";
 
 export function renderMarkdownReport(result: ScanResult): string {
   const findings = sanitizeFindingsForReport(result.findings);
-  const target = result.target.kind === "url" ? result.target.url.toString() : result.target.path;
+  const target = targetLabel(result.target);
   const lines = [
     "# Security Audit Report",
     "",
@@ -22,6 +23,10 @@ export function renderMarkdownReport(result: ScanResult): string {
     `| Low | ${result.summary.low} |`,
     `| Info | ${result.summary.info} |`,
     "",
+    "## Pre-Agent-Run Checklist",
+    "",
+    ...preAgentChecklistLines(findings),
+    "",
     "## Findings",
     ""
   ];
@@ -39,9 +44,13 @@ export function renderMarkdownReport(result: ScanResult): string {
       `- Severity: \`${finding.severity}\``,
       `- Confidence: \`${finding.confidence}\``,
       `- Category: \`${finding.category}\``,
+      `- Target type: \`${finding.targetType}\``,
       `- Source: \`${finding.sourceTool}\``,
       `- Target: \`${finding.target}\``
     );
+    if (finding.vibeRiskCategory) lines.push(`- Vibe risk category: \`${finding.vibeRiskCategory}\``);
+    if (finding.affectedDataType) lines.push(`- Affected data type: \`${finding.affectedDataType}\``);
+    if (finding.platformHint) lines.push(`- Platform hint: \`${finding.platformHint}\``);
     if (finding.file) lines.push(`- File: \`${finding.file}${finding.line ? `:${finding.line}` : ""}\``);
     if (finding.endpoint) lines.push(`- Endpoint: \`${finding.endpoint}\``);
     if (finding.cve) lines.push(`- CVE: \`${finding.cve}\`${finding.kevKnownExploited ? " (CISA KEV known exploited)" : ""}`);
@@ -65,6 +74,14 @@ export function renderMarkdownReport(result: ScanResult): string {
   }
 
   return lines.join("\n");
+}
+
+function preAgentChecklistLines(findings: ReturnType<typeof sanitizeFindingsForReport>): string[] {
+  const checklistFindings = findings.filter((finding) => finding.vibeRiskCategory === "pre-agent-run-checklist");
+  if (checklistFindings.length === 0) {
+    return ["No pre-agent checklist warnings were reported."];
+  }
+  return checklistFindings.map((finding) => `- [${finding.severity}] ${finding.title}: ${finding.verification}`);
 }
 
 function formatMappings(mappings: Array<{ id: string; name: string }>): string {

@@ -3,6 +3,7 @@ import { ScanOptions } from "./types";
 export function defaultScanOptions(overrides: Partial<ScanOptions> = {}): ScanOptions {
   const { noDestructive: _ignoredNoDestructive, ...safeOverrides } = overrides;
   const options: Omit<ScanOptions, "noDestructive"> = {
+    profile: "baseline",
     outputDir: "reports/latest",
     formats: ["markdown", "html", "json", "sarif"],
     rateLimitRps: 1,

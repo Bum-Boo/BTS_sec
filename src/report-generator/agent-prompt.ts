@@ -1,10 +1,11 @@
 import { ScanResult, Severity } from "../scanner-core/types";
 import { sanitizeFindingsForReport } from "./sanitize";
+import { targetLabel } from "./target-label";
 
 const ACTIONABLE_SEVERITIES = new Set<Severity>(["low", "medium", "high", "critical"]);
 
 export function renderAgentFixPrompt(result: ScanResult): string {
-  const target = result.target.kind === "url" ? result.target.url.toString() : result.target.path;
+  const target = targetLabel(result.target);
   const actionableFindings = sanitizeFindingsForReport(result.findings)
     .filter((finding) => ACTIONABLE_SEVERITIES.has(finding.severity))
     .filter((finding) => finding.category !== "adapter");

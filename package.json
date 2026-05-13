@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "commonjs",
   "bin": {
-    "bts-sec": "dist/src/cli.js"
+    "bts-sec": "dist/src/cli.js",
+    "vibesec": "dist/src/cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

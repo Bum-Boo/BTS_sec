@@ -2,11 +2,12 @@ import { codeScannerAdapters } from "../code-scanner";
 import { dependencyScannerAdapters, generateSbom } from "../dependency-scanner";
 import { loadKevCveSet } from "../knowledge-base/kev";
 import { secretScannerAdapters } from "../secret-scanner";
+import { vibeRiskLocalAdapters, vibeRiskUrlAdapters } from "../vibe-scanner";
 import { ScopedHttpClient, webScannerAdapters } from "../web-scanner";
 import { aggregateScanResult } from "./aggregation";
 import { runAdapterSafely } from "./task-runner";
-import { validateTarget } from "./target";
-import { Logger, ScanOptions, ScannerAdapter, ScanResult } from "./types";
+import { validateDirectoryTarget, validateTarget, validateUrlTarget } from "./target";
+import { CombinedTarget, DirectoryTarget, Logger, ScanOptions, ScannerAdapter, ScanResult, ScanTarget, UrlTarget } from "./types";
 
 export async function runScan(rawTarget: string, options: ScanOptions, logger: Logger = console): Promise<ScanResult> {
   if (!options.noDestructive) {
@@ -15,12 +16,57 @@ export async function runScan(rawTarget: string, options: ScanOptions, logger: L
 
   const startedAt = new Date().toISOString();
   const target = validateTarget(rawTarget, { confirmAuthorization: options.confirmAuthorization });
+  if (target.kind === "combined") {
+    throw new Error("Combined targets must be provided through runScanTargets.");
+  }
+  return runValidatedTargets([target], options, logger, startedAt, target);
+}
+
+export async function runScanTargets(
+  input: { url?: string; dir?: string },
+  options: ScanOptions,
+  logger: Logger = console
+): Promise<ScanResult> {
+  if (!options.noDestructive) {
+    throw new Error("Destructive scan mode is not implemented.");
+  }
+  if (!input.url && !input.dir) {
+    throw new Error("A URL, directory, or both are required.");
+  }
+
+  const targets: Array<UrlTarget | DirectoryTarget> = [];
+  if (input.url) targets.push(validateUrlTarget(input.url, options.confirmAuthorization));
+  if (input.dir) targets.push(validateDirectoryTarget(input.dir));
+
+  const reportTarget: ScanTarget = targets.length === 1
+    ? targets[0]
+    : {
+        kind: "combined",
+        raw: targets.map((target) => target.raw).join(" + "),
+        url: targets.find((target): target is UrlTarget => target.kind === "url"),
+        directory: targets.find((target): target is DirectoryTarget => target.kind === "directory")
+      } satisfies CombinedTarget;
+
+  return runValidatedTargets(targets, options, logger, new Date().toISOString(), reportTarget);
+}
+
+async function runValidatedTargets(
+  targets: Array<UrlTarget | DirectoryTarget>,
+  options: ScanOptions,
+  logger: Logger,
+  startedAt: string,
+  reportTarget: ScanTarget
+): Promise<ScanResult> {
   const metadata: Record<string, unknown> = {
     safety: {
       noDestructive: true,
       urlAuthorizationRequired: true,
       externalAdaptersEnabled: options.includeExternal,
-      rateLimitRps: options.rateLimitRps
+      rateLimitRps: options.rateLimitRps,
+      profile: options.profile,
+      localProjectScriptsExecuted: false,
+      arbitraryTargetCodeExecuted: false,
+      localOnlyLogging: true
     }
   };
 
@@ -29,40 +75,45 @@ export async function runScan(rawTarget: string, options: ScanOptions, logger: L
     metadata.kevCves = [...kevCves];
   }
 
-  if (target.kind === "directory") {
-    metadata.sbom = await generateSbom(target.path);
+  const directoryTarget = targets.find((target): target is DirectoryTarget => target.kind === "directory");
+  if (directoryTarget) {
+    metadata.sbom = await generateSbom(directoryTarget.path);
   }
 
-  const context = {
-    target,
-    options,
-    logger,
-    httpClient: target.kind === "url"
-      ? new ScopedHttpClient(target, options.rateLimitRps, options.timeoutMs)
-      : undefined
-  };
-
-  const adapters = adaptersForTarget(target.kind);
   const results = [];
-  for (const adapter of adapters) {
-    results.push(await runAdapterSafely(adapter, context));
+  for (const target of targets) {
+    const context = {
+      target,
+      options,
+      logger,
+      httpClient: target.kind === "url"
+        ? new ScopedHttpClient(target, options.rateLimitRps, options.timeoutMs)
+        : undefined
+    };
+    for (const adapter of adaptersForTarget(target.kind, options.profile)) {
+      results.push(await runAdapterSafely(adapter, context));
+    }
   }
 
   return aggregateScanResult(
-    target,
+    reportTarget,
     startedAt,
     results.flatMap((result) => result.findings),
     metadata
   );
 }
 
-function adaptersForTarget(kind: "url" | "directory"): ScannerAdapter[] {
+function adaptersForTarget(kind: "url" | "directory", profile: ScanOptions["profile"]): ScannerAdapter[] {
   if (kind === "url") {
-    return webScannerAdapters();
+    return [
+      ...webScannerAdapters(),
+      ...(profile === "vibe-risk" ? vibeRiskUrlAdapters() : [])
+    ];
   }
   return [
     ...codeScannerAdapters(),
     ...dependencyScannerAdapters(),
-    ...secretScannerAdapters()
+    ...secretScannerAdapters(),
+    ...(profile === "vibe-risk" ? vibeRiskLocalAdapters() : [])
   ];
 }

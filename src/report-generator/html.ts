@@ -1,9 +1,10 @@
 import { ScanResult } from "../scanner-core/types";
 import { sanitizeFindingsForReport } from "./sanitize";
+import { targetLabel } from "./target-label";
 
 export function renderHtmlReport(result: ScanResult): string {
   const findings = sanitizeFindingsForReport(result.findings);
-  const target = result.target.kind === "url" ? result.target.url.toString() : result.target.path;
+  const target = targetLabel(result.target);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -57,8 +58,12 @@ function renderFinding(finding: ReturnType<typeof sanitizeFindingsForReport>[num
       <span class="pill">${escapeHtml(finding.severity)}</span>
       <span class="pill">${escapeHtml(finding.confidence)} confidence</span>
       <span class="pill">${escapeHtml(finding.sourceTool)}</span>
+      <span class="pill">${escapeHtml(finding.targetType)}</span>
     </p>
     <p><strong>ID:</strong> <code>${escapeHtml(finding.id)}</code></p>
+    ${finding.vibeRiskCategory ? `<p><strong>Vibe risk:</strong> <code>${escapeHtml(finding.vibeRiskCategory)}</code></p>` : ""}
+    ${finding.affectedDataType ? `<p><strong>Affected data type:</strong> <code>${escapeHtml(finding.affectedDataType)}</code></p>` : ""}
+    ${finding.platformHint ? `<p><strong>Platform hint:</strong> <code>${escapeHtml(finding.platformHint)}</code></p>` : ""}
     ${finding.file ? `<p><strong>File:</strong> <code>${escapeHtml(finding.file)}${finding.line ? `:${finding.line}` : ""}</code></p>` : ""}
     ${finding.endpoint ? `<p><strong>Endpoint:</strong> <code>${escapeHtml(finding.endpoint)}</code></p>` : ""}
     ${finding.cve ? `<p><strong>CVE:</strong> <code>${escapeHtml(finding.cve)}</code>${finding.kevKnownExploited ? " (CISA KEV known exploited)" : ""}</p>` : ""}

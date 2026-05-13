@@ -66,6 +66,19 @@ export const OWASP_API_TOP_10_2023: Record<string, SecurityMapping> = {
   API10: { id: "API10:2023", name: "Unsafe Consumption of APIs", url: "https://owasp.org/API-Security/editions/2023/en/0xaa-unsafe-consumption-of-apis/" }
 };
 
+export const OWASP_LLM_TOP_10_2025: Record<string, SecurityMapping> = {
+  LLM01: { id: "LLM01:2025", name: "Prompt Injection", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM02: { id: "LLM02:2025", name: "Sensitive Information Disclosure", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM03: { id: "LLM03:2025", name: "Supply Chain", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM04: { id: "LLM04:2025", name: "Data and Model Poisoning", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM05: { id: "LLM05:2025", name: "Improper Output Handling", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM06: { id: "LLM06:2025", name: "Excessive Agency", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM07: { id: "LLM07:2025", name: "System Prompt Leakage", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM08: { id: "LLM08:2025", name: "Vector and Embedding Weaknesses", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM09: { id: "LLM09:2025", name: "Misinformation", url: "https://genai.owasp.org/llm-top-10/" },
+  LLM10: { id: "LLM10:2025", name: "Unbounded Consumption", url: "https://genai.owasp.org/llm-top-10/" }
+};
+
 export const CWE: Record<string, SecurityMapping> = {
   "CWE-22": cwe("CWE-22", "Path Traversal"),
   "CWE-77": cwe("CWE-77", "Command Injection"),
@@ -89,42 +102,60 @@ export const CWE: Record<string, SecurityMapping> = {
   "CWE-532": cwe("CWE-532", "Insertion of Sensitive Information into Log File")
 };
 
-const CATEGORY_MAP: Record<string, { owasp: string[]; cwe: string[] }> = {
-  "access-control": { owasp: ["A01", "API1", "API5"], cwe: ["CWE-862", "CWE-863", "CWE-284", "CWE-639"] },
-  "adapter": { owasp: [], cwe: [] },
-  "authentication": { owasp: ["A07", "API2"], cwe: ["CWE-306"] },
-  "code-execution": { owasp: ["A05"], cwe: ["CWE-78", "CWE-94", "CWE-77"] },
-  "configuration": { owasp: ["A02", "API8"], cwe: [] },
-  "cors": { owasp: ["A02", "API8"], cwe: [] },
-  "dependency": { owasp: ["A03", "API10"], cwe: [] },
-  "exposure": { owasp: ["A02", "API8"], cwe: ["CWE-200"] },
-  "file-upload": { owasp: ["A05", "A06"], cwe: ["CWE-434"] },
-  "injection": { owasp: ["A05"], cwe: ["CWE-89", "CWE-78", "CWE-94"] },
-  "logging": { owasp: ["A09"], cwe: ["CWE-117", "CWE-532"] },
-  "secrets": { owasp: ["A04", "A02"], cwe: ["CWE-798", "CWE-200"] },
-  "ssrf": { owasp: ["A05", "API7"], cwe: ["CWE-918"] },
-  "supply-chain": { owasp: ["A03", "A08", "API10"], cwe: [] },
-  "web-headers": { owasp: ["A02", "API8"], cwe: [] }
+interface MappingSet {
+  owasp: string[];
+  llm: string[];
+  cwe: string[];
+}
+
+const CATEGORY_MAP: Record<string, MappingSet> = {
+  "access-control": { owasp: ["A01", "API1", "API5"], llm: [], cwe: ["CWE-862", "CWE-863", "CWE-284", "CWE-639"] },
+  "adapter": { owasp: [], llm: [], cwe: [] },
+  "agent-config": { owasp: ["A06", "A08"], llm: ["LLM01", "LLM06", "LLM07"], cwe: ["CWE-94", "CWE-200"] },
+  "authentication": { owasp: ["A07", "API2"], llm: [], cwe: ["CWE-306"] },
+  "business-logic": { owasp: ["A01", "A06", "API1", "API5"], llm: [], cwe: ["CWE-862", "CWE-863", "CWE-639"] },
+  "code-execution": { owasp: ["A05"], llm: ["LLM05", "LLM06"], cwe: ["CWE-78", "CWE-94", "CWE-77"] },
+  "configuration": { owasp: ["A02", "API8"], llm: [], cwe: [] },
+  "cors": { owasp: ["A02", "API8"], llm: [], cwe: [] },
+  "dependency": { owasp: ["A03", "API10"], llm: ["LLM03", "LLM09"], cwe: [] },
+  "exposure": { owasp: ["A02", "API8"], llm: ["LLM02"], cwe: ["CWE-200"] },
+  "file-upload": { owasp: ["A05", "A06"], llm: [], cwe: ["CWE-434"] },
+  "injection": { owasp: ["A05"], llm: ["LLM05"], cwe: ["CWE-89", "CWE-78", "CWE-94"] },
+  "logging": { owasp: ["A09"], llm: ["LLM02"], cwe: ["CWE-117", "CWE-532"] },
+  "secrets": { owasp: ["A04", "A02"], llm: ["LLM02"], cwe: ["CWE-798", "CWE-200"] },
+  "ssrf": { owasp: ["A05", "API7"], llm: [], cwe: ["CWE-918"] },
+  "supply-chain": { owasp: ["A03", "A08", "API10"], llm: ["LLM03"], cwe: [] },
+  "web-headers": { owasp: ["A02", "API8"], llm: [], cwe: [] }
 };
 
 export function enrichFindingMappings(input: Pick<FindingInput, "id" | "category">): {
   owaspMapping: SecurityMapping[];
   cweMapping: SecurityMapping[];
+  owaspTop10_2025: string[];
+  owaspLLMTop10_2025: string[];
+  owaspAPITop10_2023: string[];
+  cweTop25_2025: string[];
 } {
   const category = CATEGORY_MAP[input.category] ?? inferMappingFromId(input.id);
+  const owaspMappings = category.owasp.map(toOwaspMapping).filter(Boolean);
+  const cweMappings = category.cwe.map((id) => CWE[id]).filter(Boolean);
   return {
-    owaspMapping: category.owasp.map(toOwaspMapping).filter(Boolean),
-    cweMapping: category.cwe.map((id) => CWE[id]).filter(Boolean)
+    owaspMapping: owaspMappings,
+    cweMapping: cweMappings,
+    owaspTop10_2025: owaspMappings.filter((mapping) => mapping.id.startsWith("A")).map((mapping) => mapping.id),
+    owaspLLMTop10_2025: category.llm.map((key) => OWASP_LLM_TOP_10_2025[key]?.id).filter(Boolean),
+    owaspAPITop10_2023: owaspMappings.filter((mapping) => mapping.id.startsWith("API")).map((mapping) => mapping.id),
+    cweTop25_2025: cweMappings.map((mapping) => mapping.id)
   };
 }
 
-function inferMappingFromId(id: string): { owasp: string[]; cwe: string[] } {
+function inferMappingFromId(id: string): MappingSet {
   if (/cors/i.test(id)) return CATEGORY_MAP.cors;
   if (/secret|credential|token|key/i.test(id)) return CATEGORY_MAP.secrets;
   if (/sql|command|eval|shell/i.test(id)) return CATEGORY_MAP.injection;
   if (/auth|access/i.test(id)) return CATEGORY_MAP["access-control"];
   if (/dependency|cve|vulnerab/i.test(id)) return CATEGORY_MAP.dependency;
-  return { owasp: [], cwe: [] };
+  return { owasp: [], llm: [], cwe: [] };
 }
 
 function toOwaspMapping(key: string): SecurityMapping {
