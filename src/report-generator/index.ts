@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ScanResult } from "../scanner-core/types";
 import { writeTextFile } from "../utils/fs";
+import { renderAgentFixPrompt } from "./agent-prompt";
 import { renderHtmlReport } from "./html";
 import { renderJsonReport } from "./json";
 import { renderMarkdownReport } from "./markdown";
@@ -12,14 +13,16 @@ export async function writeReports(result: ScanResult, outputDir: string): Promi
     markdown: path.join(outputDir, "report.md"),
     html: path.join(outputDir, "report.html"),
     json: path.join(outputDir, "report.json"),
-    sarif: path.join(outputDir, "report.sarif")
+    sarif: path.join(outputDir, "report.sarif"),
+    agentPrompt: path.join(outputDir, "agent-fix-prompt.md")
   };
 
   await Promise.all([
     writeTextFile(outputs.markdown, renderMarkdownReport(result)),
     writeTextFile(outputs.html, renderHtmlReport(result)),
     writeTextFile(outputs.json, renderJsonReport(result)),
-    writeTextFile(outputs.sarif, renderSarifReport(result))
+    writeTextFile(outputs.sarif, renderSarifReport(result)),
+    writeTextFile(outputs.agentPrompt, renderAgentFixPrompt(result))
   ]);
 
   if (result.metadata.sbom) {
@@ -30,4 +33,4 @@ export async function writeReports(result: ScanResult, outputDir: string): Promi
   return outputs;
 }
 
-export { renderHtmlReport, renderJsonReport, renderMarkdownReport, renderSarifReport };
+export { renderAgentFixPrompt, renderHtmlReport, renderJsonReport, renderMarkdownReport, renderSarifReport };

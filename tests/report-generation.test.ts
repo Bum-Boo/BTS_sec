@@ -35,6 +35,7 @@ describe("report generation", () => {
 
     expect(markdown).toContain("TOKEN=[REDACTED]");
     expect(json).toContain("TOKEN=[REDACTED]");
+    expect(json).toContain("agentFixPrompt");
     expect(sarif).toContain("TOKEN=[REDACTED]");
     expect(markdown + json + sarif).not.toContain("abc123456789");
   });

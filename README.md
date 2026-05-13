@@ -19,6 +19,7 @@ Generated reports:
 - `report.html`
 - `report.json`
 - `report.sarif`
+- `agent-fix-prompt.md`
 
 ## Safety Model
 
@@ -58,3 +59,9 @@ Options:
 - `secret-scanner`: internal redaction, Gitleaks, and TruffleHog adapters.
 - `knowledge-base`: OWASP, OWASP API, MITRE CWE Top 25, CISA KEV enrichment, remediation guidance.
 - `report-generator`: Markdown, HTML, JSON, and SARIF reports.
+
+## Agent Fix Prompts
+
+Every scan also writes `agent-fix-prompt.md`, an English prompt that can be pasted into Codex or another AI coding agent for the affected application. The prompt includes actionable findings, redacted evidence, recommended fixes, verification steps, and safety instructions that prohibit exploit execution, credential validation, brute force, destructive payloads, and out-of-scope scanning.
+
+The same text is also embedded in `report.json` as `agentFixPrompt` for automation.

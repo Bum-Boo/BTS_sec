@@ -4,7 +4,7 @@ export { validateTarget, assertUrlInScope } from "./scanner-core/target";
 export { normalizeFinding } from "./scanner-core/finding";
 export { RateLimiter } from "./scanner-core/rate-limiter";
 export { redactSecrets } from "./scanner-core/redaction";
-export { writeReports } from "./report-generator";
+export { renderAgentFixPrompt, writeReports } from "./report-generator";
 export type {
   Confidence,
   Finding,
