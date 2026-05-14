@@ -1,10 +1,12 @@
-# VibeSec / BTS Sec
+# BTS Sec
 
 > vibe-coded および AI-assisted web project 向けの passive、non-destructive な defensive security auditing toolkit。
 
 [Overview](../../README.md) | [English](README.en.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-VibeSec は、vibe-coded web applications、AI-assisted codebases、authorized web services のための防御的セキュリティ監査ツールキットです。AI coding agents、low-code AI app builders、generated auth/database/payment flows、public-by-default deployments が持ち込みやすい問題に焦点を当てています。
+BTS Sec は、vibe-coded web applications、AI-assisted codebases、authorized web services のための防御的セキュリティ監査ツールキットです。AI coding agents、low-code AI app builders、generated auth/database/payment flows、public-by-default deployments が持ち込みやすい問題に焦点を当てています。
+
+Public name は **BTS Sec** です。`VibeSec` は internal/alternate naming direction であり、まだ main public name として使うべきではありません。互換性のため `vibesec` CLI alias が残る場合がありますが、公開文書では BTS Sec を主名にします。
 
 既定では passive、non-destructive checks を行います。logs は local に保管し、検出された secrets は redacted されます。URL scans は authorization が明示的に確認された場合にのみ許可されます。
 
@@ -13,10 +15,10 @@ VibeSec は、vibe-coded web applications、AI-assisted codebases、authorized w
 ```bash
 npm install
 npm run build
-vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
-vibesec scan --api-spec ./openapi.json --out reports/api
-vibesec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
-vibesec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
+bts-sec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+bts-sec scan --api-spec ./openapi.json --out reports/api
+bts-sec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
+bts-sec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
 ```
 
 生成される reports:
@@ -50,8 +52,8 @@ bts-sec --target <url-or-directory> [options]
 主な options:
 
 - `--target <value>` authorized URL または local project directory。
-- `--url <value>` `vibesec scan` 用 authorized URL target。
-- `--dir <path>` `vibesec scan` 用 local project directory target。
+- `--url <value>` `bts-sec scan` 用 authorized URL target。
+- `--dir <path>` `bts-sec scan` 用 local project directory target。
 - `--api-spec <path>` passive OpenAPI/Swagger JSON または YAML specification scan。
 - `--profile <baseline|vibe-risk>` scan profile。既定は `baseline`。
 - `--confirm-authorization` URL targets に必要。
@@ -127,7 +129,7 @@ CVE findings は local catalogs が提供された場合、または refresh fla
 
 ## Pre-Agent-Run Checklist
 
-VibeSec は report section で次を警告します。
+BTS Sec は report section で次を警告します。
 
 - dirty git working trees。
 - missing commits。
@@ -136,7 +138,7 @@ VibeSec は report section で次を警告します。
 - risky package lifecycle scripts。
 - vibe-risk profile が見つけた AI rule と MCP configuration risks。
 
-`git status`、`git diff`、`npm test`、`pnpm test`、`pytest` などの command は suggestions のみです。VibeSec は project test scripts や arbitrary target code を実行しません。
+`git status`、`git diff`、`npm test`、`pnpm test`、`pytest` などの command は suggestions のみです。BTS Sec は project test scripts や arbitrary target code を実行しません。
 
 ## Agent Fix Prompts
 

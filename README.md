@@ -1,8 +1,10 @@
-# BTS Sec / VibeSec
+# BTS Sec
 
 > Defensive security audit toolkit for authorized web and local projects.
 
 [Overview](README.md) | [English](docs/readme/README.en.md) | [Korean](docs/readme/README.ko.md) | [Chinese](docs/readme/README.zh-CN.md) | [Japanese](docs/readme/README.ja.md)
+
+Public name: **BTS Sec**. `VibeSec` is an internal/alternate naming direction and should not be used as the main public name yet.
 
 | Area | Detail |
 |---|---|
@@ -53,6 +55,8 @@ Use BTS Sec only on projects, URLs, APIs, and codebases you own or are explicitl
 
 The generated HTML report summarizes scan configuration, coverage, known gaps, and findings.
 
+Findings are heuristic review signals. They require manual review and safe, authorized follow-up before any security conclusion.
+
 ![Report top](docs/demo-screenshots/sec-kit-flow-01-report-top.png)
 
 ![Findings section](docs/demo-screenshots/sec-kit-flow-02-findings.png)
@@ -100,6 +104,7 @@ Generated reports:
 - [Chinese README](docs/readme/README.zh-CN.md)
 - [Japanese README](docs/readme/README.ja.md)
 - [Portfolio case study](docs/portfolio-case-study.md)
+- [GitHub metadata note](docs/github-metadata.md)
 
 ## Status
 

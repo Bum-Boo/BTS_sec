@@ -1,10 +1,12 @@
-# VibeSec / BTS Sec
+# BTS Sec
 
 > Passive, non-destructive security auditing for vibe-coded and AI-assisted web projects.
 
 [Overview](../../README.md) | [English](README.en.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-VibeSec is a defensive security auditing toolkit for vibe-coded web applications, AI-assisted codebases, and authorized web services. It focuses on issues commonly introduced by AI coding agents, low-code AI app builders, generated auth/database/payment flows, and public-by-default deployments.
+BTS Sec is a defensive security auditing toolkit for vibe-coded web applications, AI-assisted codebases, and authorized web services. It focuses on issues commonly introduced by AI coding agents, low-code AI app builders, generated auth/database/payment flows, and public-by-default deployments.
+
+Public name: **BTS Sec**. `VibeSec` is an internal/alternate naming direction and should not be used as the main public name yet. The `vibesec` CLI alias may still appear for compatibility, but public documentation should lead with BTS Sec.
 
 It defaults to passive, non-destructive checks, keeps logs local, redacts detected secrets, and refuses URL scans unless authorization is explicitly confirmed.
 
@@ -13,10 +15,10 @@ It defaults to passive, non-destructive checks, keeps logs local, redacts detect
 ```bash
 npm install
 npm run build
-vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
-vibesec scan --api-spec ./openapi.json --out reports/api
-vibesec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
-vibesec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
+bts-sec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+bts-sec scan --api-spec ./openapi.json --out reports/api
+bts-sec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
+bts-sec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
 ```
 
 Generated reports:
@@ -50,8 +52,8 @@ bts-sec --target <url-or-directory> [options]
 Options:
 
 - `--target <value>` authorized URL or local project directory.
-- `--url <value>` authorized URL target for `vibesec scan`.
-- `--dir <path>` local project directory target for `vibesec scan`.
+- `--url <value>` authorized URL target for `bts-sec scan`.
+- `--dir <path>` local project directory target for `bts-sec scan`.
 - `--api-spec <path>` passive OpenAPI/Swagger JSON or YAML specification scan.
 - `--profile <baseline|vibe-risk>` scan profile. Default: `baseline`.
 - `--confirm-authorization` required for URL targets.
@@ -132,7 +134,7 @@ CVE findings can be enriched with CISA KEV and FIRST EPSS only when local catalo
 
 ## Pre-Agent-Run Checklist
 
-VibeSec adds a report section that warns about:
+BTS Sec adds a report section that warns about:
 
 - Dirty git working trees.
 - Missing commits.
@@ -141,7 +143,7 @@ VibeSec adds a report section that warns about:
 - Risky package lifecycle scripts.
 - AI rule and MCP configuration risks found by the vibe-risk profile.
 
-Suggested commands such as `git status`, `git diff`, `npm test`, `pnpm test`, and `pytest` are suggestions only. VibeSec does not execute project test scripts or arbitrary target code.
+Suggested commands such as `git status`, `git diff`, `npm test`, `pnpm test`, and `pytest` are suggestions only. BTS Sec does not execute project test scripts or arbitrary target code.
 
 ## Agent Fix Prompts
 

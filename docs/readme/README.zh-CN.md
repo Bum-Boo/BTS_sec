@@ -1,10 +1,12 @@
-# VibeSec / BTS Sec
+# BTS Sec
 
 > 面向 vibe-coded 和 AI-assisted Web 项目的 passive、non-destructive 防御性安全审计工具包。
 
 [Overview](../../README.md) | [English](README.en.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-VibeSec 是一个 defensive security auditing toolkit，面向 vibe-coded web applications、AI-assisted codebases 和 authorized web services。它关注 AI coding agents、low-code AI app builders、generated auth/database/payment flows 以及 public-by-default deployments 常引入的问题。
+BTS Sec 是一个 defensive security auditing toolkit，面向 vibe-coded web applications、AI-assisted codebases 和 authorized web services。它关注 AI coding agents、low-code AI app builders、generated auth/database/payment flows 以及 public-by-default deployments 常引入的问题。
+
+Public name 是 **BTS Sec**。`VibeSec` 是 internal/alternate naming direction，暂时不应作为 main public name。为了兼容性，`vibesec` CLI alias 可能仍然存在，但公开文档应优先使用 BTS Sec。
 
 默认行为是 passive、non-destructive checks。日志保存在本地，检测到的 secrets 会被 redacted；除非明确确认 authorization，否则拒绝 URL scans。
 
@@ -13,10 +15,10 @@ VibeSec 是一个 defensive security auditing toolkit，面向 vibe-coded web ap
 ```bash
 npm install
 npm run build
-vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
-vibesec scan --api-spec ./openapi.json --out reports/api
-vibesec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
-vibesec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
+bts-sec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+bts-sec scan --api-spec ./openapi.json --out reports/api
+bts-sec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
+bts-sec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
 ```
 
 生成的 reports:
@@ -50,8 +52,8 @@ bts-sec --target <url-or-directory> [options]
 主要 options:
 
 - `--target <value>` authorized URL 或 local project directory。
-- `--url <value>` `vibesec scan` 的 authorized URL target。
-- `--dir <path>` `vibesec scan` 的 local project directory target。
+- `--url <value>` `bts-sec scan` 的 authorized URL target。
+- `--dir <path>` `bts-sec scan` 的 local project directory target。
 - `--api-spec <path>` passive OpenAPI/Swagger JSON 或 YAML specification scan。
 - `--profile <baseline|vibe-risk>` scan profile。默认是 `baseline`。
 - `--confirm-authorization` URL targets 需要。
@@ -127,7 +129,7 @@ CVE findings 只有在提供 local catalogs 或明确使用 refresh flags 时，
 
 ## Pre-Agent-Run Checklist
 
-VibeSec 在 report 中增加 section，警告：
+BTS Sec 在 report 中增加 section，警告：
 
 - dirty git working trees。
 - missing commits。
@@ -136,7 +138,7 @@ VibeSec 在 report 中增加 section，警告：
 - risky package lifecycle scripts。
 - vibe-risk profile 发现的 AI rule 和 MCP configuration risks。
 
-`git status`、`git diff`、`npm test`、`pnpm test`、`pytest` 等 command 只是 suggestions。VibeSec 不执行 project test scripts 或 arbitrary target code。
+`git status`、`git diff`、`npm test`、`pnpm test`、`pytest` 等 command 只是 suggestions。BTS Sec 不执行 project test scripts 或 arbitrary target code。
 
 ## Agent Fix Prompts
 
