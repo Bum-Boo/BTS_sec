@@ -164,18 +164,18 @@ The same text is also embedded in `report.json` as `agentFixPrompt` for automati
 - YAML OpenAPI parsing has a conservative fallback; JSON or fully parsed OpenAPI objects provide richer schema analysis.
 ## Demo Walkthrough
 
-실제 데모는 로컬 샘플 프로젝트와 OpenAPI 파일을 검사한 뒤 HTML 리포트에서 커버리지와 발견 항목을 확인하는 흐름입니다.
+The demo flow scans a local sample project and an OpenAPI file, then reviews coverage and findings in the generated HTML report.
 
-1. `npm install`을 실행합니다.
-2. `npm run build`를 실행합니다.
-3. 본인 소유 또는 점검 허가를 받은 로컬 프로젝트를 대상으로 `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local`을 실행합니다.
-4. OpenAPI 파일이 있으면 `--api-spec "<openapi-path>"`를 함께 넣습니다.
-5. `reports\local\report.html`을 브라우저에서 열고 `Coverage & Known Gaps`, `Findings`를 확인합니다.
+1. Run `npm install`.
+2. Run `npm run build`.
+3. Scan a local project you own or are authorized to assess with `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local`.
+4. If an OpenAPI file is available, include `--api-spec "<openapi-path>"`.
+5. Open `reports\local\report.html` in a browser and review `Coverage & Known Gaps` and `Findings`.
 
-리포트를 열면 상단에서 스캔 대상, 실행 시각, 심각도 요약, 스캐너 설정을 먼저 확인합니다.
+The top of the report shows the scan target, run time, severity summary, and scanner configuration.
 
 ![Report top](docs/demo-screenshots/sec-kit-flow-01-report-top.png)
 
-아래로 내려가면 `Coverage & Known Gaps`와 `Findings` 표에서 어떤 항목이 발견됐는지 확인할 수 있습니다.
+Scroll down to `Coverage & Known Gaps` and `Findings` to see which checks ran and what was reported.
 
 ![Findings section](docs/demo-screenshots/sec-kit-flow-02-findings.png)
