@@ -172,6 +172,10 @@ The same text is also embedded in `report.json` as `agentFixPrompt` for automati
 4. OpenAPI 파일이 있으면 `--api-spec "<openapi-path>"`를 함께 넣습니다.
 5. `reports\local\report.html`을 브라우저에서 열고 `Coverage & Known Gaps`, `Findings`를 확인합니다.
 
+리포트를 열면 상단에서 스캔 대상, 실행 시각, 심각도 요약, 스캐너 설정을 먼저 확인합니다.
+
 ![Report top](docs/demo-screenshots/sec-kit-flow-01-report-top.png)
+
+아래로 내려가면 `Coverage & Known Gaps`와 `Findings` 표에서 어떤 항목이 발견됐는지 확인할 수 있습니다.
 
 ![Findings section](docs/demo-screenshots/sec-kit-flow-02-findings.png)
