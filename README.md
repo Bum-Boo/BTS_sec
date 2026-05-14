@@ -1,5 +1,18 @@
 # VibeSec / BTS Sec
 
+> Passive, non-destructive security auditing for vibe-coded and AI-assisted web projects.
+
+[English](#english) | [한국어](#한국어) | [中文](#中文) | [日本語](#日本語)
+
+| Area | Detail |
+|---|---|
+| Scan style | Passive/static checks by default |
+| Targets | Authorized URLs, local projects, OpenAPI specs |
+| Reports | Markdown, HTML, JSON, SARIF, and Codex-ready fix prompts |
+| Safety rule | No exploit execution, brute force, credential theft, or destructive payloads |
+
+## English
+
 VibeSec is a defensive security auditing toolkit for vibe-coded web applications, AI-assisted codebases, and authorized web services. It focuses on issues commonly introduced by AI coding agents, low-code AI app builders, generated auth/database/payment flows, and public-by-default deployments.
 
 It defaults to passive, non-destructive checks, keeps logs local, redacts detected secrets, and refuses URL scans unless authorization is explicitly confirmed.
@@ -179,3 +192,108 @@ The top of the report shows the scan target, run time, severity summary, and sca
 Scroll down to `Coverage & Known Gaps` and `Findings` to see which checks ran and what was reported.
 
 ![Findings section](docs/demo-screenshots/sec-kit-flow-02-findings.png)
+
+---
+
+## 한국어
+
+VibeSec / BTS Sec는 vibe-coded 웹 애플리케이션, AI-assisted 코드베이스, 승인된 웹 서비스를 위한 방어적 보안 감사 도구입니다. AI 코딩 에이전트, low-code AI app builder, 자동 생성된 인증/데이터베이스/결제 흐름, 기본 공개 배포에서 자주 생기는 위험을 점검합니다.
+
+기본 동작은 passive, non-destructive 검사입니다. 로그는 로컬에 남기고, 감지된 secret은 redaction하며, URL 스캔은 명시적 승인 문구 없이는 실행하지 않습니다.
+
+### 빠른 시작
+
+```bash
+npm install
+npm run build
+vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+vibesec scan --api-spec ./openapi.json --out reports/api
+```
+
+### 안전 모델
+
+- exploit 실행 없음
+- brute force 없음
+- credential theft 없음
+- destructive payload 없음
+- URL 스캔은 사용자가 지정한 same-origin 범위로 제한
+- URL 스캔에는 명시적 authorization confirmation 필요
+- 보고서에는 raw secret, token, response body를 저장하지 않음
+
+### 데모 흐름
+
+1. `npm install`을 실행합니다.
+2. `npm run build`를 실행합니다.
+3. 본인 소유 또는 점검 허가를 받은 로컬 프로젝트를 대상으로 `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local`을 실행합니다.
+4. OpenAPI 파일이 있으면 `--api-spec "<openapi-path>"`를 함께 넣습니다.
+5. `reports\local\report.html`을 브라우저에서 열고 `Coverage & Known Gaps`, `Findings`를 확인합니다.
+
+---
+
+## 中文
+
+VibeSec / BTS Sec 是一个防御性安全审计工具，用于 vibe-coded Web 应用、AI 辅助代码库和已授权的 Web 服务。它关注 AI coding agent、low-code AI app builder、自动生成的认证/数据库/支付流程以及默认公开部署中常见的风险。
+
+默认行为是 passive、non-destructive 检查。日志保留在本地，检测到的 secret 会被 redaction，URL 扫描必须有明确授权确认。
+
+### 快速开始
+
+```bash
+npm install
+npm run build
+vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+vibesec scan --api-spec ./openapi.json --out reports/api
+```
+
+### 安全模型
+
+- 不执行 exploit
+- 不进行 brute force
+- 不窃取 credential
+- 不发送 destructive payload
+- URL 扫描限制在用户提供的 same-origin 范围内
+- URL 扫描需要明确的 authorization confirmation
+- 报告不会保存 raw secret、token 或 response body
+
+### 演示流程
+
+1. 运行 `npm install`。
+2. 运行 `npm run build`。
+3. 对你拥有或被授权评估的本地项目运行 `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local`。
+4. 如果有 OpenAPI 文件，加入 `--api-spec "<openapi-path>"`。
+5. 在浏览器中打开 `reports\local\report.html`，查看 `Coverage & Known Gaps` 和 `Findings`。
+
+---
+
+## 日本語
+
+VibeSec / BTS Sec は、vibe-coded Web アプリ、AI 支援コードベース、許可された Web サービス向けの防御的なセキュリティ監査ツールです。AI coding agent、low-code AI app builder、自動生成された認証/データベース/決済フロー、公開デフォルトのデプロイで起きやすいリスクに注目します。
+
+デフォルトは passive、non-destructive な検査です。ログはローカルに残し、検出した secret は redaction し、URL スキャンは明示的な承認確認がない限り拒否します。
+
+### クイックスタート
+
+```bash
+npm install
+npm run build
+vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+vibesec scan --api-spec ./openapi.json --out reports/api
+```
+
+### 安全モデル
+
+- exploit 実行なし
+- brute force なし
+- credential theft なし
+- destructive payload なし
+- URL スキャンは指定された same-origin に限定
+- URL スキャンには明示的な authorization confirmation が必要
+- レポートには raw secret、token、response body を保存しない
+
+### デモ手順
+
+1. `npm install` を実行します。
+2. `npm run build` を実行します。
+3. 自分が所有している、または監査許可を得たローカルプロジェクトに対して `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local` を実行します。
+4. OpenAPI ファイルがある場合は `--api-spec "<openapi-path>"` を追加します。
+5. `reports\local\report.html` をブラウザで開き、`Coverage & Known Gaps` と `Findings` を確認します。
