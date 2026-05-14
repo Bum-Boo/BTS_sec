@@ -29,7 +29,8 @@ function scanFile(root: string, file: string, lines: string[], content: string, 
   const authPresent = hasServerSideAuthCheck(content);
   const rolePresent = /\b(role|isAdmin|admin|permission|authorize|policy|canAccess|hasPermission)\b/i.test(content);
 
-  if (isApiRoute(rel, content) && !authPresent && /(GET|POST|PUT|PATCH|DELETE|export\s+async\s+function)/.test(content)) {
+  const methods = apiMethods(content);
+  if (isApiRoute(rel, content) && !authPresent && methods.length > 0 && shouldFlagMissingApiSession(rel, content, methods)) {
     findings.push(businessFinding({
       id: "vibe.auth.api-route-missing-session",
       title: "API route may lack a server-side session check",
@@ -220,6 +221,43 @@ function isApiRoute(rel: string, content: string): boolean {
     || /\b(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/.test(content)
     || /@(GetMapping|PostMapping|PutMapping|PatchMapping|DeleteMapping|RequestMapping)/.test(content)
     || /@app\.(get|post|put|patch|delete)\s*\(/.test(content);
+}
+
+function apiMethods(content: string): string[] {
+  const methods = new Set<string>();
+  for (const match of content.matchAll(/\bexport\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\b/g)) {
+    methods.add(match[1]);
+  }
+  for (const match of content.matchAll(/\b(?:app|router)\.(get|post|put|patch|delete)\s*\(/gi)) {
+    methods.add(match[1].toUpperCase());
+  }
+  for (const match of content.matchAll(/@(GetMapping|PostMapping|PutMapping|PatchMapping|DeleteMapping|RequestMapping)/g)) {
+    const method = match[1].replace("Mapping", "").toUpperCase();
+    methods.add(method === "REQUEST" ? "UNKNOWN" : method);
+  }
+  for (const match of content.matchAll(/@app\.(get|post|put|patch|delete)\s*\(/gi)) {
+    methods.add(match[1].toUpperCase());
+  }
+  return [...methods];
+}
+
+function shouldFlagMissingApiSession(rel: string, content: string, methods: string[]): boolean {
+  if (methods.some((method) => method !== "GET")) {
+    return true;
+  }
+  if (isPrivilegedOrSensitiveApi(rel, content)) {
+    return true;
+  }
+  return !isPublicCacheableGet(content);
+}
+
+function isPrivilegedOrSensitiveApi(rel: string, content: string): boolean {
+  return /\/(?:admin|dashboard|internal|support|customer|customers|account|users|settings|billing|payment|stripe)\b/i.test(rel)
+    || /\b(?:password|token|secret|ssn|medical|diagnosis|payment|card|invoice|stripe|userId|accountId|ownerId|organizationId|orgId|findMany|findUnique|select\s*\(|from\s*\()\b/i.test(content);
+}
+
+function isPublicCacheableGet(content: string): boolean {
+  return /\bexport\s+const\s+revalidate\s*=|Cache-Control["']?\s*:\s*["'][^"']*\b(?:public|max-age|s-maxage|stale-while-revalidate)\b/i.test(content);
 }
 
 function hasServerSideAuthCheck(content: string): boolean {

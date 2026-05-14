@@ -55,6 +55,9 @@ export const pipAuditAdapter: ScannerAdapter = {
           target: context.target.raw,
           file: requirementsPath,
           cve: vulnerability.aliases?.find((alias) => alias.startsWith("CVE-")) ?? (vulnerability.id?.startsWith("CVE-") ? vulnerability.id : undefined),
+          dependencyName: dependency.name,
+          dependencyVersion: dependency.version,
+          fixAvailable: Boolean(vulnerability.fix_versions?.length),
           evidence: `${dependency.name ?? "package"} ${dependency.version ?? ""}: ${vulnerability.description ?? vulnerability.id ?? ""}`.trim(),
           recommendation: vulnerability.fix_versions?.length
             ? `Upgrade ${dependency.name} to one of: ${vulnerability.fix_versions.join(", ")}.`

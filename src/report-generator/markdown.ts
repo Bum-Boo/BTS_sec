@@ -1,3 +1,4 @@
+import { buildCoverageReport, CoverageReport } from "../knowledge-base/standards";
 import { ScanResult } from "../scanner-core/types";
 import { sanitizeFindingsForReport } from "./sanitize";
 import { targetLabel } from "./target-label";
@@ -5,6 +6,7 @@ import { targetLabel } from "./target-label";
 export function renderMarkdownReport(result: ScanResult): string {
   const findings = sanitizeFindingsForReport(result.findings);
   const target = targetLabel(result.target);
+  const coverage = coverageFor(result, findings);
   const lines = [
     "# Security Audit Report",
     "",
@@ -22,6 +24,18 @@ export function renderMarkdownReport(result: ScanResult): string {
     `| Medium | ${result.summary.medium} |`,
     `| Low | ${result.summary.low} |`,
     `| Info | ${result.summary.info} |`,
+    "",
+    "## Scanner Configuration",
+    "",
+    ...scannerConfigurationLines(result),
+    "",
+    "## Coverage & Known Gaps",
+    "",
+    ...coverageLines(coverage),
+    "",
+    "## Suppressed Findings Summary",
+    "",
+    ...suppressedLines(result),
     "",
     "## Pre-Agent-Run Checklist",
     "",
@@ -43,6 +57,7 @@ export function renderMarkdownReport(result: ScanResult): string {
       `- ID: \`${finding.id}\``,
       `- Severity: \`${finding.severity}\``,
       `- Confidence: \`${finding.confidence}\``,
+      `- Priority score: \`${finding.priorityScore}\``,
       `- Category: \`${finding.category}\``,
       `- Target type: \`${finding.targetType}\``,
       `- Source: \`${finding.sourceTool}\``,
@@ -54,6 +69,13 @@ export function renderMarkdownReport(result: ScanResult): string {
     if (finding.file) lines.push(`- File: \`${finding.file}${finding.line ? `:${finding.line}` : ""}\``);
     if (finding.endpoint) lines.push(`- Endpoint: \`${finding.endpoint}\``);
     if (finding.cve) lines.push(`- CVE: \`${finding.cve}\`${finding.kevKnownExploited ? " (CISA KEV known exploited)" : ""}`);
+    if (finding.cvssScore !== undefined) lines.push(`- CVSS: \`${finding.cvssScore}\`${finding.cvssVector ? ` \`${finding.cvssVector}\`` : ""}`);
+    if (finding.epssScore !== undefined || finding.epssPercentile !== undefined) {
+      lines.push(`- EPSS: score \`${finding.epssScore ?? "unknown"}\`, percentile \`${finding.epssPercentile ?? "unknown"}\``);
+    }
+    if (finding.dependencyName) {
+      lines.push(`- Dependency: \`${finding.dependencyName}${finding.dependencyVersion ? `@${finding.dependencyVersion}` : ""}\` (${finding.dependencyRelation ?? "unknown"})`);
+    }
     lines.push(
       `- OWASP: ${formatMappings(finding.owaspMapping)}`,
       `- CWE: ${formatMappings(finding.cweMapping)}`,
@@ -74,6 +96,61 @@ export function renderMarkdownReport(result: ScanResult): string {
   }
 
   return lines.join("\n");
+}
+
+function scannerConfigurationLines(result: ScanResult): string[] {
+  const config = result.metadata.scanOptions as Record<string, unknown> | undefined;
+  const safety = result.metadata.safety as Record<string, unknown> | undefined;
+  const entries = {
+    profile: config?.profile,
+    includeExternal: config?.includeExternal,
+    noDestructive: config?.noDestructive ?? safety?.noDestructive,
+    rateLimitRps: config?.rateLimitRps ?? safety?.rateLimitRps,
+    timeoutMs: config?.timeoutMs,
+    maxCrawlDepth: config?.maxCrawlDepth,
+    maxCrawlPages: config?.maxCrawlPages,
+    refreshKev: config?.refreshKev,
+    refreshEpss: config?.refreshEpss,
+    apiSpecPath: config?.apiSpecPath
+  };
+  return Object.entries(entries)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `- ${key}: \`${String(value)}\``);
+}
+
+function coverageLines(coverage: CoverageReport): string[] {
+  return [
+    `Coverage model: \`${coverage.model}\``,
+    "",
+    "| Standard | ID | Name | Status | Findings | Notes |",
+    "| --- | --- | --- | --- | ---: | --- |",
+    ...coverage.matrix.map((item) =>
+      `| ${item.standard} | \`${item.id}\` | ${escapeTable(item.name)} | \`${item.status}\` | ${item.relatedFindings} | ${escapeTable(item.notes)} |`
+    ),
+    "",
+    "Known gaps:",
+    ...coverage.knownGaps.map((gap) => `- ${gap}`)
+  ];
+}
+
+function suppressedLines(result: ScanResult): string[] {
+  const suppressed = result.metadata.suppressedFindings;
+  if (!Array.isArray(suppressed) || suppressed.length === 0) {
+    return ["No findings were suppressed."];
+  }
+  return suppressed.map((item) => {
+    const record = item as Record<string, unknown>;
+    return `- \`${record.id}\` at \`${record.file}:${record.line}\`: ${record.reason}`;
+  });
+}
+
+function coverageFor(result: ScanResult, findings: ReturnType<typeof sanitizeFindingsForReport>): CoverageReport {
+  const coverage = result.metadata.coverage as CoverageReport | undefined;
+  return coverage ?? buildCoverageReport(findings);
+}
+
+function escapeTable(value: string): string {
+  return value.replaceAll("|", "\\|");
 }
 
 function preAgentChecklistLines(findings: ReturnType<typeof sanitizeFindingsForReport>): string[] {

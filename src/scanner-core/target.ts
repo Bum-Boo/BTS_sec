@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DirectoryTarget, ScanTarget, UrlTarget } from "./types";
+import { ApiSpecTarget, DirectoryTarget, ScanTarget, UrlTarget } from "./types";
 
 export interface ValidateTargetOptions {
   confirmAuthorization: boolean;
@@ -51,6 +51,23 @@ export function validateDirectoryTarget(rawTarget: string): DirectoryTarget {
 
   return {
     kind: "directory",
+    raw: rawTarget,
+    path: resolved
+  };
+}
+
+export function validateApiSpecTarget(rawTarget: string): ApiSpecTarget {
+  const resolved = path.resolve(rawTarget);
+  if (!fs.existsSync(resolved)) {
+    throw new Error(`OpenAPI specification does not exist: ${resolved}`);
+  }
+  const stat = fs.statSync(resolved);
+  if (!stat.isFile()) {
+    throw new Error(`OpenAPI specification is not a file: ${resolved}`);
+  }
+
+  return {
+    kind: "api-spec",
     raw: rawTarget,
     path: resolved
   };

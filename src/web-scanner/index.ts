@@ -3,6 +3,7 @@ import { accidentalExposureChecker } from "./exposure-checker";
 import { cookieFlagChecker } from "./cookie-checker";
 import { corsChecker } from "./cors-checker";
 import { headerChecker } from "./header-checker";
+import { passiveCrawler } from "./passive-crawler";
 import { nucleiAdapter } from "./nuclei-adapter";
 import { zapBaselineAdapter } from "./zap-adapter";
 
@@ -11,6 +12,7 @@ export function webScannerAdapters(): ScannerAdapter[] {
     headerChecker,
     cookieFlagChecker,
     corsChecker,
+    passiveCrawler,
     accidentalExposureChecker,
     zapBaselineAdapter,
     nucleiAdapter

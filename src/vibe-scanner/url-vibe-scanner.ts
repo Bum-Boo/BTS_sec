@@ -48,7 +48,7 @@ const PLATFORM_MARKERS: Array<{ platform: string; pattern: RegExp }> = [
 const SENSITIVE_DATA_MARKERS: Array<{ type: UrlProbe["affectedDataType"]; pattern: RegExp }> = [
   { type: "pii", pattern: /\b(?:email|phone|ssn|address|fullName)\b/i },
   { type: "medical", pattern: /\b(?:patient|diagnosis|medical|hipaa|prescription)\b/i },
-  { type: "financial", pattern: /\b(?:card|invoice|payment|bank|stripe_customer)\b/i },
+  { type: "financial", pattern: /\b(?:credit\s*card|card\s*number|invoice\s*(?:id|number|#)|payment\s*(?:method|token|intent|secret)|bank\s*(?:account|routing)|stripe_customer)\b/i },
   { type: "customer-conversation", pattern: /\b(?:conversation|chat transcript|support ticket|message history)\b/i },
   { type: "internal-business", pattern: /\b(?:admin notes|internal|crm|customer list|dashboard)\b/i }
 ];
@@ -61,7 +61,7 @@ export const vibeUrlScanner: ScannerAdapter = {
     }
 
     const findings: Finding[] = [];
-    if (context.target.url.protocol !== "https:") {
+    if (context.target.url.protocol !== "https:" && !isLocalDevelopmentUrl(context.target.url)) {
       findings.push(normalizeFinding({
         id: "vibe.url.https-not-used",
         title: "Target URL does not use HTTPS",
@@ -179,6 +179,10 @@ function detectSensitiveDataIndicators(target: string, endpoint: string, body: s
 
 function looksLikeLoginPage(body: string): boolean {
   return /\b(sign in|log in|login|auth|password|continue with|magic link)\b/i.test(body);
+}
+
+function isLocalDevelopmentUrl(url: URL): boolean {
+  return /^(?:localhost|127(?:\.\d{1,3}){3}|\[?::1\]?)$/i.test(url.hostname);
 }
 
 function recommendationForProbe(probe: UrlProbe): string {

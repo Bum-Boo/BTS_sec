@@ -12,6 +12,9 @@ export function defaultScanOptions(overrides: Partial<ScanOptions> = {}): ScanOp
     confirmAuthorization: false,
     nucleiTemplates: [],
     refreshKev: false,
+    refreshEpss: false,
+    maxCrawlDepth: 1,
+    maxCrawlPages: 25,
     ...safeOverrides
   };
 

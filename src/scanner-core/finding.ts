@@ -1,4 +1,5 @@
 import { enrichFindingMappings } from "../knowledge-base/mappings";
+import { calculatePriorityScore } from "./risk";
 import { redactSecrets } from "./redaction";
 import { Finding, FindingInput, FindingTargetType } from "./types";
 
@@ -9,7 +10,9 @@ export function normalizeFinding(input: FindingInput): Finding {
     ? redactSecrets(input.redactedEvidence)
     : redactSecrets(evidence);
 
-  return {
+  const kevKnownExploited = input.kevKnownExploited ?? false;
+  const cisaKevPriority = input.cisaKevPriority ?? input.kevKnownExploited ?? false;
+  const finding = {
     ...input,
     severity: input.severity,
     confidence: input.confidence,
@@ -23,9 +26,13 @@ export function normalizeFinding(input: FindingInput): Finding {
     owaspLLMTop10_2025: input.owaspLLMTop10_2025 ?? mapped.owaspLLMTop10_2025,
     owaspAPITop10_2023: input.owaspAPITop10_2023 ?? mapped.owaspAPITop10_2023,
     cweTop25_2025: input.cweTop25_2025 ?? mapped.cweTop25_2025,
-    kevKnownExploited: input.kevKnownExploited ?? false,
-    cisaKevPriority: input.cisaKevPriority ?? input.kevKnownExploited ?? false,
+    kevKnownExploited,
+    cisaKevPriority,
     remediationPromptForCodex: input.remediationPromptForCodex ?? codexPromptFor(input)
+  };
+  return {
+    ...finding,
+    priorityScore: input.priorityScore ?? calculatePriorityScore(finding)
   };
 }
 
@@ -74,6 +81,7 @@ export function adapterFailureFinding(
 function inferTargetType(input: FindingInput): FindingTargetType {
   if (input.targetType) return input.targetType;
   if (input.category === "dependency") return "dependency";
+  if (input.category === "api") return "api";
   if (input.agentConfigRisk || input.category === "agent-config") return "agent-artifact";
   if (input.file) return "local";
   if (input.endpoint) return "url";

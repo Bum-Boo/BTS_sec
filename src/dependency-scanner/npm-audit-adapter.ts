@@ -59,6 +59,8 @@ function toFindings(name: string, vulnerability: NpmVulnerability, target: strin
     sourceTool: "npm-audit",
     target,
     file: "package-lock.json",
+    dependencyName: name,
+    fixAvailable: Boolean(vulnerability.fixAvailable),
     evidence: `${name} ${vulnerability.range ?? advisory.range ?? ""}${advisory.url ? ` ${advisory.url}` : ""}`.trim(),
     recommendation: npmFixRecommendation(name, vulnerability.fixAvailable),
     verification: "Re-run npm audit and confirm the advisory is no longer reported.",

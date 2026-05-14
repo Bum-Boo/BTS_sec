@@ -54,6 +54,8 @@ export const osvScannerAdapter: ScannerAdapter = {
             target: context.target.raw,
             file: resultItem.source?.path,
             cve: vulnerability.aliases?.find((alias) => alias.startsWith("CVE-")),
+            dependencyName: packageItem.package?.name,
+            dependencyVersion: packageItem.package?.version,
             evidence: `${packageItem.package?.ecosystem ?? "package"}:${packageItem.package?.name ?? "unknown"}@${packageItem.package?.version ?? "unknown"} ${vulnerability.details ?? vulnerability.id ?? ""}`,
             recommendation: "Upgrade the affected package to a non-vulnerable version or apply the advisory workaround.",
             verification: "Re-run OSV-Scanner and confirm the vulnerability is no longer reported.",

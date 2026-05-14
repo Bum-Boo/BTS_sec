@@ -26,7 +26,10 @@ describe("report generation", () => {
       summary: { critical: 0, high: 1, medium: 0, low: 0, info: 0 },
       startedAt: "2026-01-01T00:00:00.000Z",
       finishedAt: "2026-01-01T00:00:01.000Z",
-      metadata: {}
+      metadata: {
+        scanOptions: { profile: "baseline", noDestructive: true, includeExternal: false },
+        suppressedFindings: [{ id: "code.weak-crypto", file: "/tmp/app/a.ts", line: 1, reason: "test suppression" }]
+      }
     };
 
     const markdown = renderMarkdownReport(result);
@@ -36,6 +39,13 @@ describe("report generation", () => {
     expect(markdown).toContain("TOKEN=[REDACTED]");
     expect(json).toContain("TOKEN=[REDACTED]");
     expect(json).toContain("agentFixPrompt");
+    expect(markdown).toContain("Coverage & Known Gaps");
+    expect(markdown).toContain("Suppressed Findings Summary");
+    expect(json).toContain("\"coverage\"");
+    expect(json).toContain("\"priorityScore\"");
+    expect(sarif).toContain("\"coverageMatrix\"");
+    expect(sarif).toContain("\"priorityScore\"");
+    expect(sarif).toContain("\"epss\"");
     expect(sarif).toContain("TOKEN=[REDACTED]");
     expect(markdown + json + sarif).not.toContain("abc123456789");
   });

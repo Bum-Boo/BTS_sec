@@ -56,7 +56,7 @@ async function walk(dir: string, files: string[], options: { extensions?: Set<st
     if (!entry.isFile()) {
       continue;
     }
-    if (options.extensions && !options.extensions.has(path.extname(entry.name).toLowerCase())) {
+    if (options.extensions && !options.extensions.has(path.extname(entry.name).toLowerCase()) && !options.extensions.has(entry.name.toLowerCase())) {
       continue;
     }
     if (options.maxBytes) {

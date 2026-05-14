@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { builtinModules } from "node:module";
 import path from "node:path";
 import { normalizeFinding } from "../scanner-core/finding";
 import { Finding, ScannerAdapter, ScanContext } from "../scanner-core/types";
@@ -37,7 +38,10 @@ const POPULAR_PACKAGES = [
 ];
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".java", ".kt", ".gradle"]);
-const NODE_BUILTINS = new Set(["fs", "path", "node:fs", "node:path", "crypto", "http", "https", "url", "os", "child_process"]);
+const NODE_BUILTINS = new Set([
+  ...builtinModules,
+  ...builtinModules.map((name) => `node:${name}`)
+]);
 const PYTHON_STDLIB = new Set(["os", "sys", "json", "re", "pathlib", "typing", "datetime", "subprocess", "sqlite3", "logging"]);
 
 export const dependencyRiskScanner: ScannerAdapter = {
@@ -65,7 +69,7 @@ export async function analyzeDependencyRisks(
 
   for (const [importName, locations] of imports.entries()) {
     const normalized = normalizePackageName(importName);
-    if (isBuiltInImport(normalized) || declaredNames.has(normalized)) {
+    if (isBuiltInImport(importName) || isBuiltInImport(normalized) || declaredNames.has(normalized)) {
       continue;
     }
     findings.push(normalizeFinding({
@@ -89,7 +93,7 @@ export async function analyzeDependencyRisks(
 
   for (const [declaredName, sourceFile] of manifests.dependencies.entries()) {
     const normalized = normalizePackageName(declaredName);
-    if (!importedNames.has(normalized) && !isLikelyToolingDependency(normalized)) {
+    if (!importedNames.has(normalized) && !isLikelyToolingDependency(declaredName, normalized)) {
       findings.push(normalizeFinding({
         id: "vibe.dependency.declared-unused",
         title: "Declared dependency appears unused in source imports",
@@ -169,13 +173,21 @@ export async function analyzeDependencyRisks(
 }
 
 export function findPopularPackageLookalike(name: string): string | undefined {
+  if (isLikelyToolingDependency(name, normalizePackageName(name))) {
+    return undefined;
+  }
   const normalized = normalizePackageName(name);
   for (const popular of POPULAR_PACKAGES) {
     const candidate = normalizePackageName(popular);
     if (normalized === candidate) {
       continue;
     }
-    if (levenshtein(normalized, candidate) <= 2 || normalized.replace(/[-_]/g, "") === candidate.replace(/[-_]/g, "")) {
+    if (normalized[0] !== candidate[0]) {
+      continue;
+    }
+    const distance = levenshtein(normalized, candidate);
+    const maxDistance = Math.min(normalized.length, candidate.length) <= 4 ? 1 : 2;
+    if (distance <= maxDistance || normalized.replace(/[-_]/g, "") === candidate.replace(/[-_]/g, "")) {
       return popular;
     }
   }
@@ -263,16 +275,32 @@ async function collectImports(projectPath: string): Promise<Map<string, Array<{ 
 
 function extractImportsFromLine(line: string): string[] {
   const names: string[] = [];
-  const patterns = [
-    /\bimport\s+(?:[^'"]+\s+from\s+)?['"]([^'"]+)['"]/g,
-    /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /\bfrom\s+([A-Za-z0-9_.]+)\s+import\b/g,
-    /^\s*import\s+([A-Za-z0-9_.]+)/g
-  ];
-  for (const pattern of patterns) {
+  for (const pattern of [
+    /\bimport\s+(?:type\s+)?(?:[^'"]+\s+from\s+)?['"]([^'"]+)['"]/g,
+    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g
+  ]) {
     for (const match of line.matchAll(pattern)) {
       const normalized = packageRoot(match[1]);
       if (normalized) names.push(normalized);
+    }
+  }
+
+  if (/^\s*import\s+type\b/.test(line)) {
+    return names;
+  }
+
+  if (!/['"]/.test(line)) {
+    for (const match of line.matchAll(/\bfrom\s+([A-Za-z0-9_.]+)\s+import\b/g)) {
+      const normalized = packageRoot(match[1]);
+      if (normalized) names.push(normalized);
+    }
+    const importMatch = line.match(/^\s*import\s+([A-Za-z0-9_.,\s]+)/);
+    if (importMatch) {
+      for (const item of importMatch[1].split(",")) {
+        const normalized = packageRoot(item.trim().split(/\s+as\s+/i)[0] ?? "");
+        if (normalized) names.push(normalized);
+      }
     }
   }
   return names;
@@ -280,7 +308,9 @@ function extractImportsFromLine(line: string): string[] {
 
 function packageRoot(name: string): string | undefined {
   if (name.startsWith(".") || name.startsWith("/")) return undefined;
+  if (name.startsWith("@/") || name.startsWith("~/") || name.startsWith("#")) return undefined;
   if (name.startsWith("@")) return name.split("/").slice(0, 2).join("/");
+  if (name.startsWith("node:")) return name;
   return name.split(/[/.]/)[0];
 }
 
@@ -292,8 +322,10 @@ function isBuiltInImport(name: string): boolean {
   return NODE_BUILTINS.has(name) || PYTHON_STDLIB.has(name);
 }
 
-function isLikelyToolingDependency(name: string): boolean {
-  return /^(typescript|tsx|vitest|jest|eslint|prettier|webpack|vite|ts-node|nodemon|@types\/)/.test(name);
+function isLikelyToolingDependency(name: string, normalized = normalizePackageName(name)): boolean {
+  return /^@types\//.test(name)
+    || /^@tailwindcss\//.test(name)
+    || /^(typescript|tsx|vitest|jest|eslint|prettier|webpack|vite|ts-node|nodemon|tailwindcss|postcss|react-dom)$/.test(normalized);
 }
 
 function isSuspiciouslyNew(createdAt: string, now: Date): boolean {

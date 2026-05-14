@@ -14,6 +14,7 @@ interface CliArgs {
   out?: string;
   input?: string;
   format?: "html" | "markdown" | "json" | "sarif";
+  apiSpecPath?: string;
   profile: ScanProfile;
   confirmAuthorization: boolean;
   authorizationConfirmation?: string;
@@ -23,6 +24,10 @@ interface CliArgs {
   nucleiTemplates: string[];
   kevCatalogPath?: string;
   refreshKev: boolean;
+  epssCsvPath?: string;
+  refreshEpss: boolean;
+  maxCrawlDepth?: number;
+  maxCrawlPages?: number;
   help: boolean;
 }
 
@@ -38,7 +43,7 @@ async function main(argv: string[]): Promise<void> {
     return;
   }
 
-  if (!args.target && !args.url && !args.dir) {
+  if (!args.target && !args.url && !args.dir && !args.apiSpecPath) {
     printHelp();
     process.exitCode = 1;
     return;
@@ -53,15 +58,22 @@ async function main(argv: string[]): Promise<void> {
     timeoutMs: args.timeoutMs ?? 15000,
     nucleiTemplates: args.nucleiTemplates,
     kevCatalogPath: args.kevCatalogPath,
-    refreshKev: args.refreshKev
+    refreshKev: args.refreshKev,
+    epssCsvPath: args.epssCsvPath,
+    refreshEpss: args.refreshEpss,
+    apiSpecPath: args.apiSpecPath,
+    maxCrawlDepth: args.maxCrawlDepth ?? 1,
+    maxCrawlPages: args.maxCrawlPages ?? 25
   });
 
   if ((args.url || looksLikeUrl(args.target ?? "")) && !options.confirmAuthorization) {
     throw new Error(`URL scans require this exact confirmation: "${AUTHORIZATION_CONFIRMATION}"`);
   }
 
-  const result = args.url || args.dir
-    ? await runScanTargets({ url: args.url, dir: args.dir }, options, console)
+  const targetUrl = args.url ?? (args.target && looksLikeUrl(args.target) ? args.target : undefined);
+  const targetDir = args.dir ?? (args.target && !looksLikeUrl(args.target) ? args.target : undefined);
+  const result = targetUrl || targetDir || args.apiSpecPath
+    ? await runScanTargets({ url: targetUrl, dir: targetDir, apiSpec: args.apiSpecPath }, options, console)
     : await runScan(args.target as string, options, console);
   const outputs = await writeReports(result, options.outputDir);
 
@@ -82,20 +94,28 @@ function parseArgs(argv: string[]): CliArgs {
     out: envString("npm_config_out"),
     input: envString("npm_config_input"),
     format: parseFormat(envString("npm_config_format")),
+    apiSpecPath: envString("npm_config_api_spec") ? path.resolve(envString("npm_config_api_spec") as string) : undefined,
     profile: parseProfile(envString("npm_config_profile")),
     confirmAuthorization: envBoolean("npm_config_confirm_authorization"),
     authorizationConfirmation: envString("npm_config_authorization_confirmation"),
     includeExternal: envBoolean("npm_config_include_external"),
     nucleiTemplates: [],
     refreshKev: envBoolean("npm_config_refresh_kev"),
+    refreshEpss: envBoolean("npm_config_refresh_epss"),
     help: false
   };
   const rateLimit = envString("npm_config_rate_limit_rps");
   const timeout = envString("npm_config_timeout_ms");
   const kevCatalog = envString("npm_config_kev_catalog");
+  const epssCsv = envString("npm_config_epss_csv");
+  const maxCrawlDepth = envString("npm_config_max_crawl_depth");
+  const maxCrawlPages = envString("npm_config_max_crawl_pages");
   if (rateLimit) args.rateLimitRps = parsePositiveNumber(rateLimit, "--rate-limit-rps");
   if (timeout) args.timeoutMs = parsePositiveNumber(timeout, "--timeout-ms");
   if (kevCatalog) args.kevCatalogPath = path.resolve(kevCatalog);
+  if (epssCsv) args.epssCsvPath = path.resolve(epssCsv);
+  if (maxCrawlDepth) args.maxCrawlDepth = parseNonNegativeInteger(maxCrawlDepth, "--max-crawl-depth");
+  if (maxCrawlPages) args.maxCrawlPages = parsePositiveInteger(maxCrawlPages, "--max-crawl-pages");
   const positional: string[] = [];
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -119,6 +139,9 @@ function parseArgs(argv: string[]): CliArgs {
         break;
       case "--input":
         args.input = requireValue(argv, ++i, arg);
+        break;
+      case "--api-spec":
+        args.apiSpecPath = path.resolve(requireValue(argv, ++i, arg));
         break;
       case "--format":
         args.format = parseFormat(requireValue(argv, ++i, arg));
@@ -153,6 +176,18 @@ function parseArgs(argv: string[]): CliArgs {
         break;
       case "--refresh-kev":
         args.refreshKev = true;
+        break;
+      case "--epss-csv":
+        args.epssCsvPath = path.resolve(requireValue(argv, ++i, arg));
+        break;
+      case "--refresh-epss":
+        args.refreshEpss = true;
+        break;
+      case "--max-crawl-depth":
+        args.maxCrawlDepth = parseNonNegativeInteger(requireValue(argv, ++i, arg), arg);
+        break;
+      case "--max-crawl-pages":
+        args.maxCrawlPages = parsePositiveInteger(requireValue(argv, ++i, arg), arg);
         break;
       case "--help":
       case "-h":
@@ -263,6 +298,22 @@ function parsePositiveNumber(value: string, flag: string): number {
   return parsed;
 }
 
+function parsePositiveInteger(value: string, flag: string): number {
+  const parsed = parsePositiveNumber(value, flag);
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`${flag} must be an integer.`);
+  }
+  return parsed;
+}
+
+function parseNonNegativeInteger(value: string, flag: string): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${flag} must be a non-negative integer.`);
+  }
+  return parsed;
+}
+
 function isPositiveNumberText(value: string): boolean {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0;
@@ -305,6 +356,10 @@ function stripNpmConfigDuplicates(positional: string[], args: CliArgs): string[]
     args.rateLimitRps?.toString(),
     args.timeoutMs?.toString(),
     args.kevCatalogPath,
+    args.epssCsvPath,
+    args.apiSpecPath,
+    args.maxCrawlDepth?.toString(),
+    args.maxCrawlPages?.toString(),
     ...args.nucleiTemplates
   ].filter((value): value is string => Boolean(value));
 
@@ -323,6 +378,7 @@ function printHelp(): void {
 Usage:
   vibesec scan --url <authorized-url> --profile vibe-risk --authorization-confirmation "${AUTHORIZATION_CONFIRMATION}"
   vibesec scan --dir <project-path> --profile vibe-risk
+  vibesec scan --api-spec <openapi-json-or-yaml>
   vibesec scan --url <authorized-url> --dir <project-path> --profile vibe-risk
   vibesec report --format html --input reports/latest/report.json
   bts-sec --target <url-or-directory> [options]
@@ -331,6 +387,7 @@ Options:
   -t, --target <value>          Authorized URL or local project directory
       --url <value>             Authorized URL target
       --dir <path>              Local project directory target
+      --api-spec <file>         Passive OpenAPI/Swagger JSON or YAML specification scan
       --profile <name>          baseline or vibe-risk (default: baseline)
   -o, --out <dir>               Output directory (default: reports/latest)
       --confirm-authorization   Backward-compatible URL authorization confirmation
@@ -341,9 +398,13 @@ Options:
       --input <file>            report command input JSON report
       --rate-limit-rps <n>      Built-in HTTP request rate limit (default: 1)
       --timeout-ms <n>          Request and adapter timeout (default: 15000)
+      --max-crawl-depth <n>     Same-origin passive crawler depth (default: 1)
+      --max-crawl-pages <n>     Same-origin passive crawler page cap (default: 25)
       --nuclei-template <id>    Allowlisted safe Nuclei template, repeatable
       --kev-catalog <path>      Local CISA KEV JSON catalog
       --refresh-kev             Fetch CISA KEV JSON catalog
+      --epss-csv <path>         Local FIRST EPSS CSV for CVE enrichment
+      --refresh-epss            Fetch FIRST EPSS API data for reported CVEs
   -h, --help                    Show help
 `);
 }

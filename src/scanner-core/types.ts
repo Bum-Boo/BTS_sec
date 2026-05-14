@@ -3,7 +3,8 @@ export type Confidence = "low" | "medium" | "high";
 export type TargetKind = "url" | "directory" | "combined";
 export type ReportFormat = "markdown" | "html" | "json" | "sarif";
 export type ScanProfile = "baseline" | "vibe-risk";
-export type FindingTargetType = "url" | "local" | "config" | "dependency" | "agent-artifact";
+export type FindingTargetType = "url" | "local" | "config" | "dependency" | "agent-artifact" | "api";
+export type DependencyRelation = "direct" | "transitive" | "unknown";
 export type AffectedDataType =
   | "pii"
   | "medical"
@@ -49,6 +50,15 @@ export interface Finding {
   owaspMapping: SecurityMapping[];
   cweMapping: SecurityMapping[];
   cve?: string;
+  cvssScore?: number;
+  cvssVector?: string;
+  epssScore?: number;
+  epssPercentile?: number;
+  fixAvailable?: boolean;
+  dependencyName?: string;
+  dependencyVersion?: string;
+  dependencyRelation?: DependencyRelation;
+  priorityScore: number;
   kevKnownExploited: boolean;
   recommendation: string;
   verification: string;
@@ -61,12 +71,14 @@ export type FindingInput = Omit<
   | "owaspMapping"
   | "cweMapping"
   | "kevKnownExploited"
+  | "priorityScore"
   | "targetType"
 > & {
   redactedEvidence?: string;
   owaspMapping?: SecurityMapping[];
   cweMapping?: SecurityMapping[];
   kevKnownExploited?: boolean;
+  priorityScore?: number;
   targetType?: FindingTargetType;
 };
 
@@ -84,14 +96,21 @@ export interface DirectoryTarget {
   path: string;
 }
 
+export interface ApiSpecTarget {
+  kind: "api-spec";
+  raw: string;
+  path: string;
+}
+
 export interface CombinedTarget {
   kind: "combined";
   raw: string;
   url?: UrlTarget;
   directory?: DirectoryTarget;
+  apiSpec?: ApiSpecTarget;
 }
 
-export type ScanTarget = UrlTarget | DirectoryTarget | CombinedTarget;
+export type ScanTarget = UrlTarget | DirectoryTarget | ApiSpecTarget | CombinedTarget;
 
 export interface ScanOptions {
   profile: ScanProfile;
@@ -105,6 +124,11 @@ export interface ScanOptions {
   nucleiTemplates: string[];
   kevCatalogPath?: string;
   refreshKev: boolean;
+  epssCsvPath?: string;
+  refreshEpss: boolean;
+  apiSpecPath?: string;
+  maxCrawlDepth: number;
+  maxCrawlPages: number;
 }
 
 export interface Logger {

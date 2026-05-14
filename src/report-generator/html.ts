@@ -1,3 +1,4 @@
+import { buildCoverageReport, CoverageReport } from "../knowledge-base/standards";
 import { ScanResult } from "../scanner-core/types";
 import { sanitizeFindingsForReport } from "./sanitize";
 import { targetLabel } from "./target-label";
@@ -5,6 +6,7 @@ import { targetLabel } from "./target-label";
 export function renderHtmlReport(result: ScanResult): string {
   const findings = sanitizeFindingsForReport(result.findings);
   const target = targetLabel(result.target);
+  const coverage = (result.metadata.coverage as CoverageReport | undefined) ?? buildCoverageReport(findings);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -44,6 +46,24 @@ export function renderHtmlReport(result: ScanResult): string {
     </tbody>
   </table>
 
+  <h2>Scanner Configuration</h2>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+    <tbody>${scannerConfigurationRows(result)}</tbody>
+  </table>
+
+  <h2>Coverage & Known Gaps</h2>
+  <p class="meta">Coverage model: <code>${escapeHtml(coverage.model)}</code></p>
+  <table>
+    <thead><tr><th>Standard</th><th>ID</th><th>Name</th><th>Status</th><th>Findings</th><th>Notes</th></tr></thead>
+    <tbody>${coverage.matrix.map((item) => `<tr><td>${escapeHtml(item.standard)}</td><td><code>${escapeHtml(item.id)}</code></td><td>${escapeHtml(item.name)}</td><td><code>${escapeHtml(item.status)}</code></td><td>${item.relatedFindings}</td><td>${escapeHtml(item.notes)}</td></tr>`).join("")}</tbody>
+  </table>
+  <h3>Known Gaps</h3>
+  <ul>${coverage.knownGaps.map((gap) => `<li>${escapeHtml(gap)}</li>`).join("")}</ul>
+
+  <h2>Suppressed Findings Summary</h2>
+  ${suppressedHtml(result)}
+
   <h2>Findings</h2>
   ${findings.length === 0 ? "<p>No findings were reported by the enabled safe checks.</p>" : findings.map(renderFinding).join("\n")}
 </main>
@@ -57,6 +77,7 @@ function renderFinding(finding: ReturnType<typeof sanitizeFindingsForReport>[num
     <p>
       <span class="pill">${escapeHtml(finding.severity)}</span>
       <span class="pill">${escapeHtml(finding.confidence)} confidence</span>
+      <span class="pill">priority ${escapeHtml(finding.priorityScore)}</span>
       <span class="pill">${escapeHtml(finding.sourceTool)}</span>
       <span class="pill">${escapeHtml(finding.targetType)}</span>
     </p>
@@ -67,6 +88,9 @@ function renderFinding(finding: ReturnType<typeof sanitizeFindingsForReport>[num
     ${finding.file ? `<p><strong>File:</strong> <code>${escapeHtml(finding.file)}${finding.line ? `:${finding.line}` : ""}</code></p>` : ""}
     ${finding.endpoint ? `<p><strong>Endpoint:</strong> <code>${escapeHtml(finding.endpoint)}</code></p>` : ""}
     ${finding.cve ? `<p><strong>CVE:</strong> <code>${escapeHtml(finding.cve)}</code>${finding.kevKnownExploited ? " (CISA KEV known exploited)" : ""}</p>` : ""}
+    ${finding.cvssScore !== undefined ? `<p><strong>CVSS:</strong> <code>${escapeHtml(finding.cvssScore)}</code>${finding.cvssVector ? ` <code>${escapeHtml(finding.cvssVector)}</code>` : ""}</p>` : ""}
+    ${finding.epssScore !== undefined || finding.epssPercentile !== undefined ? `<p><strong>EPSS:</strong> score <code>${escapeHtml(finding.epssScore ?? "unknown")}</code>, percentile <code>${escapeHtml(finding.epssPercentile ?? "unknown")}</code></p>` : ""}
+    ${finding.dependencyName ? `<p><strong>Dependency:</strong> <code>${escapeHtml(finding.dependencyName)}${finding.dependencyVersion ? `@${escapeHtml(finding.dependencyVersion)}` : ""}</code> (${escapeHtml(finding.dependencyRelation ?? "unknown")})</p>` : ""}
     <p><strong>OWASP:</strong> ${escapeHtml(formatMappings(finding.owaspMapping))}</p>
     <p><strong>CWE:</strong> ${escapeHtml(formatMappings(finding.cweMapping))}</p>
     <h4>Evidence</h4>
@@ -76,6 +100,38 @@ function renderFinding(finding: ReturnType<typeof sanitizeFindingsForReport>[num
     <h4>Verification</h4>
     <p>${escapeHtml(finding.verification)}</p>
   </article>`;
+}
+
+function scannerConfigurationRows(result: ScanResult): string {
+  const config = result.metadata.scanOptions as Record<string, unknown> | undefined;
+  const safety = result.metadata.safety as Record<string, unknown> | undefined;
+  const entries = {
+    profile: config?.profile,
+    includeExternal: config?.includeExternal,
+    noDestructive: config?.noDestructive ?? safety?.noDestructive,
+    rateLimitRps: config?.rateLimitRps ?? safety?.rateLimitRps,
+    timeoutMs: config?.timeoutMs,
+    maxCrawlDepth: config?.maxCrawlDepth,
+    maxCrawlPages: config?.maxCrawlPages,
+    refreshKev: config?.refreshKev,
+    refreshEpss: config?.refreshEpss,
+    apiSpecPath: config?.apiSpecPath
+  };
+  return Object.entries(entries)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `<tr><td>${escapeHtml(key)}</td><td><code>${escapeHtml(String(value))}</code></td></tr>`)
+    .join("");
+}
+
+function suppressedHtml(result: ScanResult): string {
+  const suppressed = result.metadata.suppressedFindings;
+  if (!Array.isArray(suppressed) || suppressed.length === 0) {
+    return "<p>No findings were suppressed.</p>";
+  }
+  return `<ul>${suppressed.map((item) => {
+    const record = item as Record<string, unknown>;
+    return `<li><code>${escapeHtml(record.id)}</code> at <code>${escapeHtml(record.file)}:${escapeHtml(record.line)}</code>: ${escapeHtml(record.reason)}</li>`;
+  }).join("")}</ul>`;
 }
 
 function formatMappings(mappings: Array<{ id: string; name: string }>): string {
