@@ -1,10 +1,12 @@
-# VibeSec / BTS Sec
+# BTS Sec
 
 > vibe-coded 및 AI-assisted web project를 위한 passive, non-destructive defensive security auditing toolkit.
 
 [Overview](../../README.md) | [English](README.en.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-VibeSec은 vibe-coded web application, AI-assisted codebase, authorized web service를 위한 방어적 보안 감사 툴킷입니다. AI coding agent, low-code AI app builder, generated auth/database/payment flow, public-by-default deployment에서 자주 생기는 위험을 찾는 데 초점을 둡니다.
+BTS Sec은 vibe-coded web application, AI-assisted codebase, authorized web service를 위한 방어적 보안 감사 툴킷입니다. AI coding agent, low-code AI app builder, generated auth/database/payment flow, public-by-default deployment에서 자주 생기는 위험을 찾는 데 초점을 둡니다.
+
+Public name은 **BTS Sec**입니다. `VibeSec`은 내부/alternate naming direction이며 아직 main public name으로 쓰지 않습니다. 호환성을 위해 `vibesec` CLI alias가 남아 있을 수 있지만, 공개 문서의 주 이름은 BTS Sec입니다.
 
 기본값은 passive, non-destructive check입니다. log는 local에 보관하고, 감지된 secret은 redaction하며, URL scan은 authorization이 명시적으로 확인된 경우에만 허용합니다.
 
@@ -13,10 +15,10 @@ VibeSec은 vibe-coded web application, AI-assisted codebase, authorized web serv
 ```bash
 npm install
 npm run build
-vibesec scan --dir ./path/to/project --profile vibe-risk --out reports/local
-vibesec scan --api-spec ./openapi.json --out reports/api
-vibesec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
-vibesec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
+bts-sec scan --dir ./path/to/project --profile vibe-risk --out reports/local
+bts-sec scan --api-spec ./openapi.json --out reports/api
+bts-sec scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
+bts-sec scan --url https://example.internal --dir ./path/to/project --api-spec ./openapi.yaml --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/full
 ```
 
 생성되는 report:
@@ -50,8 +52,8 @@ bts-sec --target <url-or-directory> [options]
 주요 options:
 
 - `--target <value>` authorized URL 또는 local project directory.
-- `--url <value>` `vibesec scan`용 authorized URL target.
-- `--dir <path>` `vibesec scan`용 local project directory target.
+- `--url <value>` `bts-sec scan`용 authorized URL target.
+- `--dir <path>` `bts-sec scan`용 local project directory target.
 - `--api-spec <path>` passive OpenAPI/Swagger JSON 또는 YAML specification scan.
 - `--profile <baseline|vibe-risk>` scan profile. 기본값은 `baseline`.
 - `--confirm-authorization` URL target에 필요.
@@ -127,7 +129,7 @@ CVE finding은 local catalog가 제공되거나 refresh flag가 명시적으로 
 
 ## Pre-Agent-Run Checklist
 
-VibeSec은 report에 다음 위험을 경고하는 section을 추가합니다.
+BTS Sec은 report에 다음 위험을 경고하는 section을 추가합니다.
 
 - dirty git working tree.
 - missing commit.
@@ -136,7 +138,7 @@ VibeSec은 report에 다음 위험을 경고하는 section을 추가합니다.
 - risky package lifecycle script.
 - vibe-risk profile에서 찾은 AI rule 및 MCP configuration risk.
 
-`git status`, `git diff`, `npm test`, `pnpm test`, `pytest` 같은 command는 suggestion일 뿐입니다. VibeSec은 project test script나 arbitrary target code를 실행하지 않습니다.
+`git status`, `git diff`, `npm test`, `pnpm test`, `pytest` 같은 command는 suggestion일 뿐입니다. BTS Sec은 project test script나 arbitrary target code를 실행하지 않습니다.
 
 ## Agent Fix Prompts
 
