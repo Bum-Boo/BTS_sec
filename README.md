@@ -162,3 +162,16 @@ The same text is also embedded in `report.json` as `agentFixPrompt` for automati
 - Auth/payment/database analysis is framework-pattern based and can miss custom abstractions.
 - Memory-safety CWEs such as use-after-free and out-of-bounds read/write require dedicated tooling beyond the built-in passive scanner.
 - YAML OpenAPI parsing has a conservative fallback; JSON or fully parsed OpenAPI objects provide richer schema analysis.
+## Demo Walkthrough
+
+실제 데모는 로컬 샘플 프로젝트와 OpenAPI 파일을 검사한 뒤 HTML 리포트에서 커버리지와 발견 항목을 확인하는 흐름입니다.
+
+1. `npm install`을 실행합니다.
+2. `npm run build`를 실행합니다.
+3. 본인 소유 또는 점검 허가를 받은 로컬 프로젝트를 대상으로 `npm run scan -- scan --dir "<project-path>" --profile vibe-risk --out reports/local`을 실행합니다.
+4. OpenAPI 파일이 있으면 `--api-spec "<openapi-path>"`를 함께 넣습니다.
+5. `reports\local\report.html`을 브라우저에서 열고 `Coverage & Known Gaps`, `Findings`를 확인합니다.
+
+![Report top](docs/demo-screenshots/sec-kit-flow-01-report-top.png)
+
+![Findings section](docs/demo-screenshots/sec-kit-flow-02-findings.png)
