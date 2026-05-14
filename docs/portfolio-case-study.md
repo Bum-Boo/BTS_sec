@@ -1,51 +1,33 @@
 # BTS Sec Portfolio Case Study
 
-BTS Sec, also presented as VibeSec in the README, is a defensive security auditing toolkit for authorized projects. It focuses on passive and static checks for AI-assisted web apps, generated codebases, OpenAPI specs, dependency manifests, local projects, and explicitly authorized URL targets.
-
-## Positioning
-
-BTS Sec fits the portfolio theme of safety-aware tooling design. The important story is not offensive security; it is a practical review tool for people shipping AI-built or fast-prototyped apps who need a structured way to find common risks before release.
-
-The public framing should stay centered on:
-
-- defensive security review
-- authorized targets only
-- passive/static checks by default
-- redacted evidence
-- explicit known gaps
-- Codex-ready remediation prompts
-
 ## Problem
 
 AI-assisted app builders and coding agents can produce working software quickly, but they often miss security boundaries around authentication, ownership checks, environment variables, webhooks, public deployment exposure, dependency hygiene, and generated configuration files.
 
-BTS Sec addresses that gap with deterministic checks and reports that help a developer review risk without asking the scanner to exploit the target.
+## Target Users
 
-## Product Shape
+- Developers reviewing AI-assisted or fast-prototyped web apps.
+- Solo builders preparing a release checklist.
+- Teams that want passive/static review signals before deeper security testing.
+- Codex users who want structured remediation prompts.
 
-The tool can scan:
+## Design Goal
 
-- local project directories
-- OpenAPI or Swagger specifications
-- authorized same-origin URL targets
-- dependency manifests and lockfiles
-- AI assistant rule files and MCP/config artifacts
+Provide a defensive, authorized-use-only scanner that surfaces common release risks without exploiting targets or storing sensitive raw evidence.
 
-It produces multiple report formats:
+## Core Workflow
 
-- Markdown
-- HTML
-- JSON
-- SARIF
-- agent remediation prompt
+1. Install dependencies and build the CLI.
+2. Scan a local project directory, OpenAPI spec, or explicitly authorized URL.
+3. Review Markdown, HTML, JSON, SARIF, and `agent-fix-prompt.md` outputs.
+4. Use the report to prioritize manual fixes.
+5. Hand the safe remediation prompt to Codex when useful.
 
-The generated `agent-fix-prompt.md` is designed to hand findings back to Codex or another coding agent with safety constraints and verification steps.
+## Architecture Summary
 
-## Safety Boundaries
+The TypeScript CLI is organized into scanner modules: core orchestration, web scanner, API scanner, code scanner, dependency scanner, secret scanner, vibe-risk scanner, knowledge-base mappings, and report generation.
 
-BTS Sec should always be documented as a defensive toolkit. The repository should avoid language that implies bypassing, exploiting, credential validation, brute force, destructive payloads, or unauthorized scanning.
-
-Important boundaries:
+## Safety / Privacy Decisions
 
 - URL scans require explicit authorization confirmation.
 - Built-in HTTP checks are same-origin and rate-limited.
@@ -54,28 +36,30 @@ Important boundaries:
 - Evidence is redacted before report output.
 - The scanner reports likely risks and known gaps; it does not prove exploitability.
 
-## Implementation Notes
+## Technical Highlights
 
-The codebase is a TypeScript CLI organized into scanner modules: core orchestration, web scanner, API scanner, code scanner, dependency scanner, secret scanner, vibe-risk scanner, knowledge base mappings, and report generation.
+- Passive/static scan orchestration.
+- Vibe-risk profile for AI-assisted app artifacts.
+- OpenAPI and dependency review paths.
+- Secret redaction.
+- SARIF report output.
+- Codex-ready remediation prompt generation.
+- Tests around no-destructive-mode expectations and adapter behavior.
 
-Tests cover target validation, no-destructive-mode expectations, passive crawler behavior, secret redaction, OpenAPI scanning, dependency/SBOM checks, report generation, Nuclei allowlisting, and adapter failure handling.
+## Current Limitations
 
-## Portfolio Value
-
-BTS Sec demonstrates:
-
-- defensive security tooling
-- AI-workflow-aware risk detection
-- static/passive scanner architecture
-- standards mapping and report generation
-- secret redaction and evidence handling
-- safety constraints around authorized testing
-- agent handoff prompts for remediation
+- Findings are heuristic and require manual review.
+- The tool does not exploit targets or prove vulnerabilities.
+- Some weakness classes require dedicated SAST, compiler, runtime, or active authorized testing beyond this toolkit.
+- Public sample report fixtures still need to be added.
 
 ## Next Steps
 
-- Keep README examples strictly authorized and defensive.
 - Add a sanitized sample project and sample HTML report.
+- Keep README examples strictly authorized and defensive.
+- Expand documentation around false positives and known gaps.
 - Keep exploit-like language out of public descriptions and topics.
-- Expand documentation around known gaps and false-positive review.
-- Keep validation commands and expected report outputs easy to reproduce.
+
+## Portfolio Value
+
+BTS Sec demonstrates defensive security tooling, AI-workflow-aware risk detection, static/passive scanner architecture, standards mapping, secret redaction, safety constraints around authorized testing, and agent handoff prompts for remediation.
