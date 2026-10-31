@@ -13,8 +13,11 @@ const PROBES: ExposureProbe[] = [
   { path: "/.env.local", title: ".env.local file may be exposed", marker: /\b[A-Z0-9_]{2,}\s*=\s*.{3,}/ },
   { path: "/.git/HEAD", title: ".git metadata may be exposed", marker: /^ref:\s+refs\/heads\//m },
   { path: "/.git/config", title: ".git config may be exposed", marker: /\[core\]|\[remote / },
-  { path: "/backup.zip", title: "Backup archive may be exposed", marker: /PK\x03\x04|html|zip/i },
-  { path: "/backup.tar.gz", title: "Backup archive may be exposed", marker: /\x1f\x8b|html|gzip/i },
+  // Archive probes match only the file signature: an "html" marker matched the
+  // index.html that single-page apps return with HTTP 200 for every path.
+  // The body is decoded as UTF-8, so the gzip 0x8b byte arrives as U+FFFD.
+  { path: "/backup.zip", title: "Backup archive may be exposed", marker: /^PK\x03\x04/ },
+  { path: "/backup.tar.gz", title: "Backup archive may be exposed", marker: /^\x1f(?:\x8b|\uFFFD)/ },
   { path: "/db.sql", title: "Database dump may be exposed", marker: /CREATE TABLE|INSERT INTO|-- MySQL/i },
   { path: "/debug", title: "Debug page may be exposed", marker: /debug|stack trace|environment|traceback/i },
   { path: "/debug/vars", title: "Debug vars endpoint may be exposed", marker: /cmdline|memstats|goroutine|debug/i },
