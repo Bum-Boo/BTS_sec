@@ -51,11 +51,17 @@ export class ScopedHttpClient implements SafeHttpClient {
   }
 }
 
-function headersToRecord(headers: Headers): Record<string, string> {
-  const record: Record<string, string> = {};
+function headersToRecord(headers: Headers): Record<string, string | string[]> {
+  const record: Record<string, string | string[]> = {};
   headers.forEach((value, key) => {
     record[key.toLowerCase()] = value;
   });
+  // forEach yields each Set-Cookie header separately, so the loop above keeps
+  // only the last one. Keep every cookie.
+  const cookies = headers.getSetCookie();
+  if (cookies.length > 0) {
+    record["set-cookie"] = cookies;
+  }
   return record;
 }
 

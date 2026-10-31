@@ -19,7 +19,7 @@ export const cookieFlagChecker: ScannerAdapter = {
       return { findings: [] };
     }
 
-    const cookies = splitSetCookie(Array.isArray(setCookie) ? setCookie.join(",") : setCookie);
+    const cookies = Array.isArray(setCookie) ? setCookie : splitSetCookie(setCookie);
     const findings: Finding[] = [];
     const remediation = remediationFor(
       "web.insecure-cookie",
@@ -28,12 +28,15 @@ export const cookieFlagChecker: ScannerAdapter = {
     );
 
     for (const cookie of cookies) {
-      const name = cookie.split("=")[0]?.trim() || "unknown";
-      const lower = cookie.toLowerCase();
+      const [nameValue, ...attributePairs] = cookie.split(";");
+      const name = nameValue.split("=")[0]?.trim() || "unknown";
+      // Compare attribute names only; a substring check accepted values such as
+      // Path=/secure-area or theme=httponly-dark as the Secure/HttpOnly flags.
+      const attributes = new Set(attributePairs.map((pair) => pair.split("=")[0].trim().toLowerCase()));
       const missing = [
-        lower.includes("secure") ? undefined : "Secure",
-        lower.includes("httponly") ? undefined : "HttpOnly",
-        lower.includes("samesite") ? undefined : "SameSite"
+        attributes.has("secure") ? undefined : "Secure",
+        attributes.has("httponly") ? undefined : "HttpOnly",
+        attributes.has("samesite") ? undefined : "SameSite"
       ].filter((value): value is string => Boolean(value));
 
       if (missing.length > 0) {
