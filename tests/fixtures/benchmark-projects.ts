@@ -177,6 +177,7 @@ export const fixtureProjects: FixtureProject[] = [
         ['    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")', ["code.raw-sql"]],
         ['    cursor.execute("SELECT * FROM users WHERE name = %s" % user_id)', ["code.raw-sql"]],
         ['    cursor.execute("DELETE FROM users WHERE id = {}".format(user_id))', ["code.raw-sql"]],
+        ['    cursor.execute("SELECT * FROM users WHERE email = \'" + user_id + "\'")', ["code.raw-sql"]],
         ["def proxy(request: Request):", []],
         ['    return requests.get(request.query_params["url"]).text', ["code.ssrf-user-controlled-url"]],
         ["def read(request):", []],

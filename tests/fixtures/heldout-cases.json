@@ -1,0 +1,682 @@
+[
+  {
+    "ext": ".ts",
+    "line": "  apiKey: \"fixture-live-api-key-1234567890\",",
+    "expect": [
+      "code.hardcoded-secret",
+      "secret.detected"
+    ],
+    "note": "object-literal property apiKey with quoted secret in TS config"
+  },
+  {
+    "ext": ".py",
+    "line": "DB_PASSWORD = 'fixture-pw-Xk29!pq'",
+    "expect": [
+      "code.hardcoded-secret",
+      "secret.detected"
+    ],
+    "note": "module-level uppercase constant, single-quoted"
+  },
+  {
+    "ext": ".java",
+    "line": "    private static final String CLIENT_SECRET = \"fixture-client-secret-abc123\";",
+    "expect": [
+      "code.hardcoded-secret",
+      "secret.detected"
+    ],
+    "note": "Java static final constant holding client secret"
+  },
+  {
+    "ext": ".json",
+    "line": "  \"client_secret\": \"fixture-oauth-secret-9f8e7d6c\",",
+    "expect": [
+      "code.hardcoded-secret",
+      "secret.detected"
+    ],
+    "note": "JSON config key client_secret with literal value"
+  },
+  {
+    "ext": ".js",
+    "line": "const password = process.env.DB_PASSWORD;",
+    "expect": [],
+    "note": "password read from environment, no literal"
+  },
+  {
+    "ext": ".java",
+    "line": "        String token = jwtService.generateToken(user);",
+    "expect": [],
+    "note": "token assigned from method call, not a literal"
+  },
+  {
+    "ext": ".env",
+    "line": "DATABASE_PASSWORD=fixture-env-pw-77aa",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "unquoted KEY=value secret in .env"
+  },
+  {
+    "ext": ".yml",
+    "line": "  api_token: fixture-yml-token-5521",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "unquoted yaml secret value"
+  },
+  {
+    "ext": ".env",
+    "line": "AWS_ACCESS_KEY_ID={AWS}FIXTURE123456789",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "AWS access key id shape"
+  },
+  {
+    "ext": ".yml",
+    "line": "    github_token: {GH}FIXTURE12345678901234567890123456789",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "GitHub personal access token shape in CI yaml"
+  },
+  {
+    "ext": ".env",
+    "line": "STRIPE_KEY={STRIPE}FIXTURE12345678901234567",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "Stripe live secret key shape"
+  },
+  {
+    "ext": ".env",
+    "line": "SLACK_BOT={SLACK}0000000000-0000000000-abcdefFIXTURE",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "Slack bot token shape"
+  },
+  {
+    "ext": ".yml",
+    "line": "maps_key: {GOOGLE}FIXTURE1234567890123456789012345678",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "Google API key shape"
+  },
+  {
+    "ext": ".env",
+    "line": "SIGNING_KEY={PK}",
+    "expect": [
+      "secret.detected"
+    ],
+    "note": "private key PEM header"
+  },
+  {
+    "ext": ".env",
+    "line": "DB_PASSWORD=",
+    "expect": [],
+    "note": "empty value placeholder, nothing secret"
+  },
+  {
+    "ext": ".yml",
+    "line": "  password: ${DB_PASSWORD}",
+    "expect": [],
+    "note": "env-var interpolation reference, not a literal secret"
+  },
+  {
+    "ext": ".js",
+    "line": "const payload = jwt.decode(req.headers.authorization.split(' ')[1]);",
+    "expect": [
+      "code.weak-jwt"
+    ],
+    "note": "jwt.decode used as auth without verification"
+  },
+  {
+    "ext": ".ts",
+    "line": "jwt.verify(token, publicKey, { ignoreExpiration: true }, (err, claims) => done(err, claims));",
+    "expect": [
+      "code.weak-jwt"
+    ],
+    "note": "verify with ignoreExpiration true"
+  },
+  {
+    "ext": ".py",
+    "line": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+    "expect": [
+      "code.weak-jwt"
+    ],
+    "note": "PyJWT verify_signature disabled"
+  },
+  {
+    "ext": ".js",
+    "line": "const claims = jwt.verify(token, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] });",
+    "expect": [],
+    "note": "correct verify with pinned algorithm"
+  },
+  {
+    "ext": ".py",
+    "line": "payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[\"HS256\"])",
+    "expect": [],
+    "note": "PyJWT decode with key and algorithms is verified"
+  },
+  {
+    "ext": ".js",
+    "line": "app.use(cors());",
+    "expect": [
+      "code.unsafe-cors"
+    ],
+    "note": "cors with no options allows any origin"
+  },
+  {
+    "ext": ".py",
+    "line": "    allow_origins=[\"*\"],",
+    "expect": [
+      "code.unsafe-cors"
+    ],
+    "note": "FastAPI CORSMiddleware kwarg on its own line"
+  },
+  {
+    "ext": ".java",
+    "line": "@CrossOrigin(origins = \"*\")",
+    "expect": [
+      "code.unsafe-cors"
+    ],
+    "note": "Spring wildcard CrossOrigin with spaces"
+  },
+  {
+    "ext": ".ts",
+    "line": "res.setHeader('Access-Control-Allow-Origin', '*');",
+    "expect": [
+      "code.unsafe-cors"
+    ],
+    "note": "manual wildcard ACAO header"
+  },
+  {
+    "ext": ".js",
+    "line": "app.use(cors({ origin: ['https://app.example.com'], credentials: true }));",
+    "expect": [],
+    "note": "cors with explicit allowlist"
+  },
+  {
+    "ext": ".py",
+    "line": "    allow_origins=settings.CORS_ORIGINS,",
+    "expect": [],
+    "note": "origins from settings, not wildcard"
+  },
+  {
+    "ext": ".js",
+    "line": "const upload = multer({ dest: 'public/uploads/' });",
+    "expect": [
+      "code.unsafe-upload"
+    ],
+    "note": "multer writing into publicly served dir"
+  },
+  {
+    "ext": ".ts",
+    "line": "router.post('/avatar', requireAuth, upload.single('avatar'), saveAvatar);",
+    "expect": [
+      "code.unsafe-upload"
+    ],
+    "note": "upload.single middleware on non-admin route"
+  },
+  {
+    "ext": ".py",
+    "line": "async def upload_receipt(file: UploadFile = File(...)):",
+    "expect": [
+      "code.unsafe-upload"
+    ],
+    "note": "FastAPI UploadFile handler"
+  },
+  {
+    "ext": ".java",
+    "line": "    public ResponseEntity<String> importCsv(@RequestParam(\"file\") MultipartFile file) {",
+    "expect": [
+      "code.unsafe-upload"
+    ],
+    "note": "Spring MultipartFile parameter"
+  },
+  {
+    "ext": ".js",
+    "line": "const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5e6 } });",
+    "expect": [],
+    "note": "multer memory storage, not public dir"
+  },
+  {
+    "ext": ".ts",
+    "line": "const files = Array.from(input.files ?? []);",
+    "expect": [],
+    "note": "browser file input handling, no upload sink"
+  },
+  {
+    "ext": ".js",
+    "line": "exec(`git log --format=%H ${branch}`, (err, stdout) => cb(stdout));",
+    "expect": [
+      "code.shell-execution"
+    ],
+    "note": "child_process exec with template string"
+  },
+  {
+    "ext": ".py",
+    "line": "subprocess.run(f\"tar -czf {archive} {folder}\", shell=True, check=True)",
+    "expect": [
+      "code.shell-execution"
+    ],
+    "note": "subprocess with shell=True"
+  },
+  {
+    "ext": ".java",
+    "line": "Process p = Runtime.getRuntime().exec(\"sh -c \" + userCmd);",
+    "expect": [
+      "code.shell-execution"
+    ],
+    "note": "Runtime.exec"
+  },
+  {
+    "ext": ".ts",
+    "line": "const child = spawn(cmd, args, { shell: true, stdio: 'inherit' });",
+    "expect": [
+      "code.shell-execution"
+    ],
+    "note": "spawn with shell:true"
+  },
+  {
+    "ext": ".js",
+    "line": "execFile('git', ['rev-parse', 'HEAD'], (err, out) => resolve(out.trim()));",
+    "expect": [],
+    "note": "execFile with argv array, no shell"
+  },
+  {
+    "ext": ".py",
+    "line": "subprocess.run([\"ffmpeg\", \"-i\", src, dst], check=True)",
+    "expect": [],
+    "note": "subprocess with list args, no shell"
+  },
+  {
+    "ext": ".js",
+    "line": "const match = /^v(\\d+)/.exec(version);",
+    "expect": [],
+    "note": "RegExp.exec"
+  },
+  {
+    "ext": ".ts",
+    "line": "const user = await User.findOne({ email }).exec();",
+    "expect": [],
+    "note": "Mongoose query exec"
+  },
+  {
+    "ext": ".js",
+    "line": "const result = eval(expression);",
+    "expect": [
+      "code.eval-usage"
+    ],
+    "note": "direct eval"
+  },
+  {
+    "ext": ".ts",
+    "line": "const fn = new Function('ctx', `return (${template});`);",
+    "expect": [
+      "code.eval-usage"
+    ],
+    "note": "Function constructor from template"
+  },
+  {
+    "ext": ".js",
+    "line": "vm.runInContext(code, sandbox, { timeout: 50 });",
+    "expect": [
+      "code.eval-usage"
+    ],
+    "note": "node vm execution"
+  },
+  {
+    "ext": ".java",
+    "line": "ScriptEngine engine = new ScriptEngineManager().getEngineByName(\"nashorn\");",
+    "expect": [
+      "code.eval-usage"
+    ],
+    "note": "Java script engine"
+  },
+  {
+    "ext": ".py",
+    "line": "        model.eval()",
+    "expect": [],
+    "note": "PyTorch eval mode"
+  },
+  {
+    "ext": ".py",
+    "line": "config = ast.literal_eval(raw)",
+    "expect": [],
+    "note": "ast.literal_eval only parses literals; naive 'eval(' regex would match"
+  },
+  {
+    "ext": ".js",
+    "line": "db.query(\"SELECT * FROM users WHERE email = '\" + req.body.email + \"'\");",
+    "expect": [
+      "code.raw-sql"
+    ],
+    "note": "string concatenation into query"
+  },
+  {
+    "ext": ".ts",
+    "line": "await pool.query(`DELETE FROM sessions WHERE user_id = ${userId}`);",
+    "expect": [
+      "code.raw-sql"
+    ],
+    "note": "template literal interpolation into query"
+  },
+  {
+    "ext": ".py",
+    "line": "cursor.execute(\"UPDATE accounts SET balance = %s WHERE id = %s\" % (amount, acct_id))",
+    "expect": [
+      "code.raw-sql"
+    ],
+    "note": "percent-format string formatting, not driver parameters"
+  },
+  {
+    "ext": ".py",
+    "line": "query = f\"SELECT id, name FROM orders WHERE customer_id = {customer_id}\"",
+    "expect": [
+      "code.raw-sql"
+    ],
+    "note": "f-string containing SQL"
+  },
+  {
+    "ext": ".js",
+    "line": "db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);",
+    "expect": [],
+    "note": "parameterized query"
+  },
+  {
+    "ext": ".py",
+    "line": "cursor.execute(\"UPDATE users SET last_login = NOW() WHERE id = %s\", (user_id,))",
+    "expect": [],
+    "note": "driver-parameterized execute (comma, not %)"
+  },
+  {
+    "ext": ".py",
+    "line": "logger.info(f\"delete requested for {item_id}\")",
+    "expect": [],
+    "note": "log message mentioning delete, not SQL"
+  },
+  {
+    "ext": ".js",
+    "line": "app.get('/admin/users', listUsers);",
+    "expect": [
+      "code.missing-authorization"
+    ],
+    "note": "admin route with no auth middleware"
+  },
+  {
+    "ext": ".ts",
+    "line": "router.delete('/users/:id', async (req, res) => { await Users.remove(req.params.id); res.sendStatus(204); });",
+    "expect": [
+      "code.missing-authorization"
+    ],
+    "note": "user-by-id delete with inline handler only"
+  },
+  {
+    "ext": ".js",
+    "line": "app.get('/admin/users', requireAdmin, listUsers);",
+    "expect": [],
+    "note": "auth middleware present"
+  },
+  {
+    "ext": ".ts",
+    "line": "router.get('/api/admin/stats', authenticate, authorize('admin'), getStats);",
+    "expect": [],
+    "note": "authenticate/authorize middleware chain"
+  },
+  {
+    "ext": ".js",
+    "line": "console.log('login attempt', { email, password });",
+    "expect": [
+      "code.dangerous-logging"
+    ],
+    "note": "password variable logged via shorthand object"
+  },
+  {
+    "ext": ".py",
+    "line": "logging.debug(\"refresh token issued: %s\", refresh_token)",
+    "expect": [
+      "code.dangerous-logging"
+    ],
+    "note": "token variable passed as log arg"
+  },
+  {
+    "ext": ".js",
+    "line": "console.log('token refreshed successfully');",
+    "expect": [],
+    "note": "word token only in message text"
+  },
+  {
+    "ext": ".py",
+    "line": "logger.warning(\"password reset email sent to %s\", user.email)",
+    "expect": [],
+    "note": "password in text, logged value is email"
+  },
+  {
+    "ext": ".js",
+    "line": "      <div className=\"post-body\" dangerouslySetInnerHTML={{ __html: post.body }} />",
+    "expect": [
+      "code.next-dangerous-html"
+    ],
+    "note": "raw HTML from data"
+  },
+  {
+    "ext": ".ts",
+    "line": "  return <article className=\"prose\" dangerouslySetInnerHTML={{ __html: marked(md) }} />;",
+    "expect": [
+      "code.next-dangerous-html"
+    ],
+    "note": "markdown render is not sanitization"
+  },
+  {
+    "ext": ".js",
+    "line": "      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.body) }} />",
+    "expect": [],
+    "note": "DOMPurify on same line"
+  },
+  {
+    "ext": ".ts",
+    "line": "  <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.text, opts) }} />",
+    "expect": [],
+    "note": "sanitizeHtml on same line"
+  },
+  {
+    "ext": ".py",
+    "line": "app = FastAPI(title=\"billing\", version=\"2.1\", debug=True)",
+    "expect": [
+      "code.fastapi-debug"
+    ],
+    "note": "debug=True after other kwargs"
+  },
+  {
+    "ext": ".py",
+    "line": "api = FastAPI(debug = True, docs_url=\"/docs\")",
+    "expect": [
+      "code.fastapi-debug"
+    ],
+    "note": "debug with spaces around ="
+  },
+  {
+    "ext": ".py",
+    "line": "app = FastAPI(debug=settings.DEBUG)",
+    "expect": [],
+    "note": "debug from settings, not literal True"
+  },
+  {
+    "ext": ".py",
+    "line": "app = FastAPI(title=\"billing\", debug=False)",
+    "expect": [],
+    "note": "debug explicitly False"
+  },
+  {
+    "ext": ".java",
+    "line": "        http.csrf().disable();",
+    "expect": [
+      "code.spring-csrf-disabled"
+    ],
+    "note": "legacy chained disable"
+  },
+  {
+    "ext": ".java",
+    "line": "        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(a -> a.anyRequest().authenticated());",
+    "expect": [
+      "code.spring-csrf-disabled"
+    ],
+    "note": "lambda DSL disable"
+  },
+  {
+    "ext": ".java",
+    "line": "            .csrf(AbstractHttpConfigurer::disable)",
+    "expect": [
+      "code.spring-csrf-disabled"
+    ],
+    "note": "method reference disable"
+  },
+  {
+    "ext": ".java",
+    "line": "        http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));",
+    "expect": [],
+    "note": "CSRF configured, not disabled"
+  },
+  {
+    "ext": ".js",
+    "line": "const resp = await axios.get(req.query.url);",
+    "expect": [
+      "code.ssrf-user-controlled-url"
+    ],
+    "note": "URL straight from query string"
+  },
+  {
+    "ext": ".py",
+    "line": "r = requests.get(request.args.get(\"callback\"), timeout=5)",
+    "expect": [
+      "code.ssrf-user-controlled-url"
+    ],
+    "note": "Flask request.args URL"
+  },
+  {
+    "ext": ".ts",
+    "line": "const upstream = await fetch(`${req.body.webhookUrl}/ping`);",
+    "expect": [
+      "code.ssrf-user-controlled-url"
+    ],
+    "note": "fetch URL interpolated from body"
+  },
+  {
+    "ext": ".js",
+    "line": "await axios.post('https://hooks.example.com/notify', req.body);",
+    "expect": [],
+    "note": "fixed URL, body only as payload"
+  },
+  {
+    "ext": ".py",
+    "line": "resp = requests.post(BILLING_URL, json=request.json, timeout=10)",
+    "expect": [],
+    "note": "constant URL, request data as payload"
+  },
+  {
+    "ext": ".js",
+    "line": "res.sendFile(path.join(__dirname, 'files', req.params.name));",
+    "expect": [
+      "code.path-traversal"
+    ],
+    "note": "sendFile path from route param"
+  },
+  {
+    "ext": ".js",
+    "line": "fs.createReadStream('./exports/' + req.query.file).pipe(res);",
+    "expect": [
+      "code.path-traversal"
+    ],
+    "note": "stream path concatenated from query"
+  },
+  {
+    "ext": ".py",
+    "line": "    with open(os.path.join(UPLOAD_DIR, request.args[\"name\"])) as fh:",
+    "expect": [
+      "code.path-traversal"
+    ],
+    "note": "open with request.args filename"
+  },
+  {
+    "ext": ".java",
+    "line": "InputStream in = new FileInputStream(baseDir + request.getParameter(\"doc\"));",
+    "expect": [
+      "code.path-traversal"
+    ],
+    "note": "FileInputStream with request parameter"
+  },
+  {
+    "ext": ".js",
+    "line": "res.sendFile(path.join(__dirname, 'public', 'index.html'));",
+    "expect": [],
+    "note": "static path"
+  },
+  {
+    "ext": ".js",
+    "line": "const tpl = fs.readFileSync(path.resolve(__dirname, 'email.html'), 'utf8');",
+    "expect": [],
+    "note": "fixed template path"
+  },
+  {
+    "ext": ".js",
+    "line": "const total = items.reduce((sum, i) => sum + i.price, 0);",
+    "expect": [],
+    "note": "ordinary code"
+  },
+  {
+    "ext": ".py",
+    "line": "def normalize(name: str) -> str:",
+    "expect": [],
+    "note": "ordinary code"
+  },
+  {
+    "ext": ".java",
+    "line": "    public List<Order> findByCustomer(Long customerId) {",
+    "expect": [],
+    "note": "ordinary code"
+  },
+  {
+    "ext": ".ts",
+    "line": "export interface UserDto { id: string; email: string; }",
+    "expect": [],
+    "note": "ordinary code"
+  },
+  {
+    "ext": ".yml",
+    "line": "    image: node:20-alpine",
+    "expect": [],
+    "note": "ordinary yaml"
+  },
+  {
+    "ext": ".json",
+    "line": "  \"version\": \"1.4.2\",",
+    "expect": [],
+    "note": "ordinary json"
+  },
+  {
+    "ext": ".env",
+    "line": "NODE_ENV=production",
+    "expect": [],
+    "note": "non-secret env var"
+  },
+  {
+    "ext": ".env",
+    "line": "PORT=8080",
+    "expect": [],
+    "note": "non-secret env var"
+  },
+  {
+    "ext": ".py",
+    "line": "    return [x for x in rows if x.active]",
+    "expect": [],
+    "note": "ordinary code"
+  },
+  {
+    "ext": ".json",
+    "line": "  \"scripts\": { \"test\": \"jest --coverage\" },",
+    "expect": [],
+    "note": "ordinary package.json"
+  }
+]

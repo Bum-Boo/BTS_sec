@@ -41,7 +41,7 @@ const RULES: CodeRule[] = [
   rule("code.shell-execution", "Shell execution reachable in application code", "code-execution", "high", "medium", /\b(?:child_process|childProcess|cp)\.(?:exec|execSync)\s*\(|(?<![.\w$])exec(?:Sync)?\s*\(|\bspawn(?:Sync)?\s*\([^)]*shell\s*:\s*true|os\.(?:system|popen)\s*\(|subprocess\.(?:Popen|run|call|check_call|check_output)\s*\([^)]*shell\s*=\s*True|Runtime\.getRuntime\(\)\.exec/i),
   rule("code.eval-usage", "Dynamic code evaluation", "code-execution", "high", "high", /(?<![.\w$])eval\s*\(|\b(?:window|globalThis|global|self)\.eval\s*\(|new\s+Function\s*\(|vm\.runIn(?:This|New)?Context\s*\(|ScriptEngineManager\b/i),
   rule("code.raw-sql", "Raw SQL string construction", "injection", "high", "medium", new RegExp(
-    String.raw`(?:query|execute|raw)\s*\(\s*(?:\x60[^\x60]*${SQL_STATEMENT}[^\x60]*\$\{|(['"])[^'"]*${SQL_STATEMENT}[^'"]*\1\s*(?:\+|%|\.format\s*\())|\bf(['"])[^'"]*${SQL_STATEMENT}[^'"]*\{`,
+    String.raw`(?:query|execute|raw)\s*\(\s*(?:\x60[^\x60]*${SQL_STATEMENT}[^\x60]*\$\{|(?:"[^"]*${SQL_STATEMENT}[^"]*"|'[^']*${SQL_STATEMENT}[^']*')\s*(?:\+|%|\.format\s*\())|\bf(?:"[^"]*${SQL_STATEMENT}[^"]*\{|'[^']*${SQL_STATEMENT}[^']*\{)`,
     "i"
   )),
   rule("code.missing-authorization", "Privileged route may be missing authorization middleware", "access-control", "medium", "low", (line) =>
