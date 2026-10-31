@@ -180,7 +180,8 @@ export const fixtureProjects: FixtureProject[] = [
         ["def proxy(request: Request):", []],
         ['    return requests.get(request.query_params["url"]).text', ["code.ssrf-user-controlled-url"]],
         ["def read(request):", []],
-        ['    return open(request.args["path"]).read()', ["code.path-traversal"]]
+        ['    return open(request.args["path"]).read()', ["code.path-traversal"]],
+        ['claims = jwt.decode(token, options={"verify_signature": False})', ["code.weak-jwt"]]
       ]
     }
   },
@@ -204,7 +205,9 @@ export const fixtureProjects: FixtureProject[] = [
         ["    return model(batch)", []],
         ["def update_status(user_id):", []],
         ['    print(f"Could not update profile for {user_id}")', []],
-        ["    token = request_token()", []]
+        ["    token = request_token()", []],
+        ['claims = jwt.decode(token, key, algorithms=["HS256"])', []],
+        ['page = requests.get("https://status.example.test", verify=False)', []]
       ]
     }
   },
