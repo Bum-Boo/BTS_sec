@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathExists } from "../utils/fs";
 
 export interface SbomComponent {
   type: "library";
@@ -17,15 +16,25 @@ export interface SbomDocument {
   metadata: {
     timestamp: string;
     tools: Array<{ name: string; version: string }>;
+    properties?: Array<{ name: string; value: string }>;
   };
   components: SbomComponent[];
 }
 
 export async function generateSbom(projectPath: string): Promise<SbomDocument> {
-  const components: SbomComponent[] = [
-    ...(await packageJsonComponents(projectPath)),
-    ...(await requirementsComponents(projectPath))
-  ];
+  const skipped: string[] = [];
+  const components: SbomComponent[] = [];
+  for (const [name, parse] of [
+    ["package.json", packageJsonComponents],
+    ["requirements.txt", requirementsComponents]
+  ] as const) {
+    try {
+      const content = await readManifest(projectPath, name);
+      if (content !== undefined) components.push(...parse(content));
+    } catch (error) {
+      skipped.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 
   return {
     bomFormat: "CycloneDX",
@@ -33,18 +42,32 @@ export async function generateSbom(projectPath: string): Promise<SbomDocument> {
     version: 1,
     metadata: {
       timestamp: new Date().toISOString(),
-      tools: [{ name: "bts-sec", version: "0.1.0" }]
+      tools: [{ name: "bts-sec", version: "0.1.0" }],
+      ...(skipped.length > 0 ? { properties: skipped.map((value) => ({ name: "bts-sec:skipped-manifest", value })) } : {})
     },
     components
   };
 }
 
-async function packageJsonComponents(projectPath: string): Promise<SbomComponent[]> {
-  const packageJsonPath = path.join(projectPath, "package.json");
-  if (!(await pathExists(packageJsonPath))) {
-    return [];
+// Reads a manifest only if it resolves inside the target, so a symlinked
+// manifest cannot pull files from elsewhere on disk into the report.
+async function readManifest(projectPath: string, name: string): Promise<string | undefined> {
+  const candidate = path.join(projectPath, name);
+  let resolved: string;
+  try {
+    resolved = await fs.realpath(candidate);
+  } catch {
+    return undefined;
   }
-  const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf8")) as {
+  const relative = path.relative(await fs.realpath(projectPath), resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("resolves outside the target directory and was not read");
+  }
+  return fs.readFile(resolved, "utf8");
+}
+
+function packageJsonComponents(content: string): SbomComponent[] {
+  const pkg = JSON.parse(content) as {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
     optionalDependencies?: Record<string, string>;
@@ -67,12 +90,7 @@ function toNpmComponents(deps: Record<string, string> | undefined, scope: "requi
   }));
 }
 
-async function requirementsComponents(projectPath: string): Promise<SbomComponent[]> {
-  const requirementsPath = path.join(projectPath, "requirements.txt");
-  if (!(await pathExists(requirementsPath))) {
-    return [];
-  }
-  const content = await fs.readFile(requirementsPath, "utf8");
+function requirementsComponents(content: string): SbomComponent[] {
   return content
     .split(/\r?\n/)
     .map((line) => line.trim())
