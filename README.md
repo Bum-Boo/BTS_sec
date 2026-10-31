@@ -66,16 +66,19 @@ TODO: add a sanitized sample project and checked-in sample report fixture for pu
 ## CLI Quick Start
 
 ```bash
-npm install
+npm ci
 npm run build
-npm run scan -- scan --dir ./path/to/project --profile vibe-risk --out reports/local
+npm test
+npm run scan -- --target ./path/to/project --out reports/local
 ```
 
 Authorized URL scan example:
 
 ```bash
-npm run scan -- scan --url https://example.internal --profile vibe-risk --authorization-confirmation "I confirm I own or am authorized to test this target." --out reports/url
+npm run scan -- --target https://example.internal --confirm-authorization --out reports/url
 ```
+
+The built CLI is equivalent: `node dist/src/cli.js --target <url-or-directory> [options]`. Run with `--help` for all options.
 
 Generated reports:
 
@@ -83,7 +86,11 @@ Generated reports:
 - `report.html`
 - `report.json`
 - `report.sarif`
-- `agent-fix-prompt.md`
+- `sbom.cdx.json` (directory scans)
+
+> Branch note: `--dir`, `--url`, `--api-spec`, `--profile vibe-risk`, `--authorization-confirmation`, `agent-fix-prompt.md`, and the `api-scanner`/`vibe-scanner` modules described below and in `docs/readme/*` are not part of this branch's CLI; they are developed on separate feature branches. On this branch the local checks are the `custom-code-scanner` rules, the internal secret scanner, and SBOM generation from `package.json`/`requirements.txt`.
+
+With `--include-external`, installed adapters may contact their own services (for example npm audit, pip-audit, OSV-Scanner and Trivy query vulnerability databases with the project's dependency list). Without it, directory scans make no network requests and start no processes.
 
 ## Module Layout
 
