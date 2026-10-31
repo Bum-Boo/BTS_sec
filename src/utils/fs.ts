@@ -56,7 +56,7 @@ async function walk(dir: string, files: string[], options: { extensions?: Set<st
     if (!entry.isFile()) {
       continue;
     }
-    if (options.extensions && !options.extensions.has(path.extname(entry.name).toLowerCase())) {
+    if (options.extensions && !options.extensions.has(fileTypeKey(entry.name))) {
       continue;
     }
     if (options.maxBytes) {
@@ -67,6 +67,18 @@ async function walk(dir: string, files: string[], options: { extensions?: Set<st
     }
     files.push(fullPath);
   }
+}
+
+// path.extname() returns "" for dotfiles such as ".env" or ".npmrc", so they
+// would never match an extension allowlist. ".env.local", ".env.production"
+// and similar variants are all treated as ".env".
+export function fileTypeKey(fileName: string): string {
+  const base = path.basename(fileName).toLowerCase();
+  if (base === ".env" || base.startsWith(".env.")) {
+    return ".env";
+  }
+  const ext = path.extname(base);
+  return ext || (base.startsWith(".") ? base : "");
 }
 
 export async function readFileLines(filePath: string): Promise<string[]> {
