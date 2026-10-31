@@ -58,6 +58,7 @@ export const semgrepAdapter: ScannerAdapter = {
       "--json",
       "--quiet",
       "--disable-version-check",
+      "--metrics=off",
       context.target.path
     ], { timeoutMs: context.options.timeoutMs * 4 });
 
