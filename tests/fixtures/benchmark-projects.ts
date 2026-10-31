@@ -22,7 +22,7 @@ const fakePrivateKeyHeader = "-----BEGIN " + "PRIVATE KEY-----";
 const fakePrivateKeyFooter = "-----END " + "PRIVATE KEY-----";
 const fakeStripeKey = "sk_" + "live_" + "FIXTUREFIXTUREFIXTURE0000";
 const fakeSlackToken = "xox" + "b-0000000000-0000000000-FIXTUREFIXTURE";
-const fakeGoogleKey = "AI" + "za" + "SyFIXTURE_FIXTURE_FIXTURE_FIXTURE0";
+const fakeGoogleKey = "AI" + "za" + "SyFIXTURE_FIXTURE_FIXTURE_FIXTURE00";
 
 const SECRET = ["secret.detected"];
 const CODE_AND_SECRET = ["code.hardcoded-secret", "secret.detected"];
