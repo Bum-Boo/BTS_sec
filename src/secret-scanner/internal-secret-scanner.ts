@@ -2,18 +2,18 @@ import path from "node:path";
 import { normalizeFinding } from "../scanner-core/finding";
 import { redactSecrets } from "../scanner-core/redaction";
 import { Finding, ScannerAdapter, ScanContext } from "../scanner-core/types";
-import { readFileLines, walkFiles } from "../utils/fs";
+import { fileTypeKey, readFileLines, walkFiles } from "../utils/fs";
+import { hasSecretAssignment, hasSecretToken } from "./secret-patterns";
 
-const SECRET_PATTERNS = [
-  /\b(?:api[_-]?key|secret|token|password|passwd|private[_-]?key|client[_-]?secret)\b\s*[:=]\s*['"]?[^'"\s]{8,}/i,
-  /\bAKIA[0-9A-Z]{16}\b/,
-  /\bgh[pousr]_[A-Za-z0-9_]{20,}\b/,
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----/
-];
+// File types where a bare `KEY=value` is a literal rather than a code expression.
+const CONFIG_EXTENSIONS = new Set([
+  ".env", ".txt", ".md", ".yaml", ".yml", ".toml", ".ini", ".properties", ".npmrc", ".cfg", ".conf", ".sh"
+]);
 
 const TEXT_EXTENSIONS = new Set([
-  ".env", ".txt", ".md", ".json", ".yaml", ".yml", ".toml", ".ini", ".properties",
-  ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".go", ".rb", ".php", ".cs"
+  ...CONFIG_EXTENSIONS,
+  ".json", ".pem", ".key", ".tf", ".tfvars", ".xml",
+  ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".py", ".java", ".kt", ".go", ".rb", ".php", ".cs", ".rs"
 ]);
 
 export const internalSecretScanner: ScannerAdapter = {
@@ -30,10 +30,11 @@ export const internalSecretScanner: ScannerAdapter = {
     const findings: Finding[] = [];
 
     for (const file of files) {
+      const allowUnquoted = CONFIG_EXTENSIONS.has(fileTypeKey(file));
       const lines = await readFileLines(file);
       for (let index = 0; index < lines.length; index += 1) {
         const line = lines[index];
-        if (!SECRET_PATTERNS.some((pattern) => pattern.test(line))) {
+        if (!hasSecretToken(line) && !hasSecretAssignment(line, { allowUnquoted })) {
           continue;
         }
         findings.push(normalizeFinding({
