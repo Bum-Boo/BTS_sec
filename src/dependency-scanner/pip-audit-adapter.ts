@@ -1,7 +1,7 @@
 import path from "node:path";
 import { adapterInfoFinding, normalizeFinding } from "../scanner-core/finding";
 import { Finding, ScannerAdapter, ScanContext } from "../scanner-core/types";
-import { commandExists, runCommand } from "../utils/command";
+import { commandExists, runCommand, summarizeCommandFailure } from "../utils/command";
 import { pathExists } from "../utils/fs";
 
 interface PipAuditJson {
@@ -35,11 +35,20 @@ export const pipAuditAdapter: ScannerAdapter = {
       return { findings: [adapterInfoFinding("pip-audit", context.target.raw, "requirements.txt was not found; pip-audit was skipped.")] };
     }
 
+    // Without --disable-pip/--no-deps, pip-audit resolves requirements by
+    // installing them into a temporary virtualenv, which builds local or sdist
+    // requirements and runs the target's setup.py. Unpinned requirements make
+    // pip-audit fail instead, which is reported as a safe adapter failure.
     const result = await runCommand("pip-audit", [
       "-r", requirementsPath,
       "-f", "json",
-      "-l"
+      "--disable-pip",
+      "--no-deps"
     ], { cwd: context.target.path, timeoutMs: context.options.timeoutMs * 4 });
+
+    if (result.timedOut || (result.exitCode !== 0 && !result.stdout.trim())) {
+      throw new Error(summarizeCommandFailure(result));
+    }
 
     const parsed = JSON.parse(result.stdout || "{}") as PipAuditJson;
     const findings: Finding[] = [];
